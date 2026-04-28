@@ -16,7 +16,6 @@ import org.lwjgl.glfw.GLFW;
 import java.io.IOException;
 
 public class AllayshipScreen extends Screen {
-    // tweak the positions here & in repositionElements, temp position for now
     private final Button transformButton = new Button(1, 28, 29, 34, 32);
     private final Button guideButton = new Button(2, 22, 27, 14, 19);
     private final Button fairyButton = new Button(3, 28, 20, 33, 10);
@@ -43,8 +42,8 @@ public class AllayshipScreen extends Screen {
 
     @Override
     protected void repositionElements() {
-        int posX = 0;
-        int posY = this.height - 75;
+        int posX = this.width / 2 - 48;
+        int posY = this.height / 2 - 36;
 
         for (Button button : this.buttons) {
             button.x = posX + button.offsetX;
