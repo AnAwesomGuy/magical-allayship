@@ -15,11 +15,11 @@ import java.util.UUID;
 
 public class FairySavedData extends SavedData {
     public static final Codec<FairySavedData> CODEC =
-        Codec.unboundedMap(UUIDUtil.CODEC, CustomData.COMPOUND_TAG_CODEC)
+        Codec.unboundedMap(UUIDUtil.STRING_CODEC, CustomData.COMPOUND_TAG_CODEC)
              .xmap(FairySavedData::new, fairySavedData -> fairySavedData.fairyUuidToData);
     @SuppressWarnings("DataFlowIssue")
     public static final SavedDataType<FairySavedData> TYPE = new SavedDataType<>(
-        MagicalAllayship.id("fairyDespawnData"), FairySavedData::new, CODEC, null);
+        MagicalAllayship.id("fairydespawndata"), FairySavedData::new, CODEC, null);
 
     public static FairySavedData getDataFrom(ServerLevel level) {
         return level.getServer().getDataStorage().computeIfAbsent(TYPE);
