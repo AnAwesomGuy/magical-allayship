@@ -3,6 +3,7 @@
 	"package": "net.anawesomguy.allayship.client.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
+		"HumanoidArmorLayerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

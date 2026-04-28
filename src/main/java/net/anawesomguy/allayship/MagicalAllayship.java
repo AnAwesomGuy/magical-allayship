@@ -5,6 +5,8 @@ import com.mojang.serialization.Codec;
 import net.anawesomguy.allayship.entity.Fairy;
 import net.anawesomguy.allayship.item.AllayshipItem;
 import net.anawesomguy.allayship.network.CallFairyPayload;
+import net.anawesomguy.allayship.network.RequestTransformationPayload;
+import net.anawesomguy.allayship.network.SetTransformationPayload;
 import net.anawesomguy.allayship.world.FairySavedData;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
@@ -25,6 +27,7 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +37,7 @@ import java.util.function.Function;
 public class MagicalAllayship implements ModInitializer {
     public static final String MOD_ID = "magical-allayship";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+    public static final String ALLAYSUIT_TAG = "allaysuit";
 
     public static final Identifier FAIRY_ID = Identifier.fromNamespaceAndPath(MOD_ID, "fairy");
     public static final EntityType<Fairy> FAIRY;
@@ -69,9 +73,31 @@ public class MagicalAllayship implements ModInitializer {
         FabricDefaultAttributeRegistry.register(FAIRY, Fairy.createAttributes());
         // we should create a networking class if we'll ever have even more networking logic
         PayloadTypeRegistry.serverboundPlay().register(CallFairyPayload.TYPE, CallFairyPayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(RequestTransformationPayload.TYPE, RequestTransformationPayload.STREAM_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(SetTransformationPayload.TYPE, SetTransformationPayload.STREAM_CODEC);
+
         ServerPlayNetworking.registerGlobalReceiver(CallFairyPayload.TYPE, (payload, context) -> {
             InteractionHand hand = payload.mainHand() ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
             AllayshipItem.callFairy(context.player().level(), context.player(), hand);
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(RequestTransformationPayload.TYPE, (payload, context) -> {
+            InteractionHand hand = payload.mainHand() ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
+            if (context.player().getItemInHand(hand).getItem() != ALLAYSHIP) {
+                return;
+            }
+
+            if (context.player().entityTags().contains(ALLAYSUIT_TAG)) {
+                context.player().removeTag(ALLAYSUIT_TAG);
+            } else {
+                context.player().addTag(ALLAYSUIT_TAG);
+            }
+
+            boolean transformed = context.player().entityTags().contains(ALLAYSUIT_TAG);
+            SetTransformationPayload setTransformationPayload = new SetTransformationPayload(context.player().getId(), transformed);
+            for (ServerPlayer player : context.player().level().getServer().getPlayerList().getPlayers()) {
+                ServerPlayNetworking.send(player, setTransformationPayload);
+            }
         });
 
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {

@@ -3,6 +3,7 @@ package net.anawesomguy.allayship.client.gui;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.anawesomguy.allayship.MagicalAllayship;
 import net.anawesomguy.allayship.network.CallFairyPayload;
+import net.anawesomguy.allayship.network.RequestTransformationPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -84,6 +85,10 @@ public class AllayshipScreen extends Screen {
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
         if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT && this.pressedButton != null) {
+            if (this.pressedButton == this.transformButton && this.pressedButton.isOverMask((int) event.x(), (int) event.y())) {
+                ClientPlayNetworking.send(new RequestTransformationPayload(this.hand == InteractionHand.MAIN_HAND));
+            }
+
             if (this.pressedButton == this.fairyButton && this.pressedButton.isOverMask((int) event.x(), (int) event.y())) {
                 ClientPlayNetworking.send(new CallFairyPayload(this.hand == InteractionHand.MAIN_HAND));
             }
