@@ -61,6 +61,10 @@ public class AllayshipItem extends Item {
 
     @Override
     public InteractionResult use(Level l, Player player, InteractionHand hand) {
+        return InteractionResult.PASS;
+    }
+
+    public static InteractionResult callFairy(Level l, Player player, InteractionHand hand) {
         if (!(l instanceof ServerLevel level))
             return InteractionResult.PASS;
         ItemStack held = player.getItemInHand(hand);

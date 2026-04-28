@@ -2,6 +2,8 @@ package net.anawesomguy.allayship.client.gui;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import net.anawesomguy.allayship.MagicalAllayship;
+import net.anawesomguy.allayship.network.CallFairyPayload;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -9,6 +11,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
+import net.minecraft.world.InteractionHand;
 import org.lwjgl.glfw.GLFW;
 import java.io.IOException;
 
@@ -19,10 +22,12 @@ public class AllayshipScreen extends Screen {
     private final Button fairyButton = new Button(3, 28, 20, 33, 10);
     private final Button settingsButton = new Button(4, 22, 27, 59, 19);
     private final Button[] buttons = {this.transformButton, this.guideButton, this.fairyButton, this.settingsButton};
+    private final InteractionHand hand;
     private Button pressedButton;
 
-    public AllayshipScreen() {
+    public AllayshipScreen(InteractionHand hand) {
         super(Component.empty());
+        this.hand = hand;
     }
 
     @Override
@@ -80,6 +85,10 @@ public class AllayshipScreen extends Screen {
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
         if (event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT && this.pressedButton != null) {
+            if (this.pressedButton == this.fairyButton && this.pressedButton.isOverMask((int) event.x(), (int) event.y())) {
+                ClientPlayNetworking.send(new CallFairyPayload(this.hand == InteractionHand.MAIN_HAND));
+            }
+
             this.pressedButton = null;
             return true;
         }

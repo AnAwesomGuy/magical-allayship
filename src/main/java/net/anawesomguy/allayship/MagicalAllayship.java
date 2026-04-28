@@ -4,9 +4,12 @@ import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import net.anawesomguy.allayship.entity.Fairy;
 import net.anawesomguy.allayship.item.AllayshipItem;
+import net.anawesomguy.allayship.network.CallFairyPayload;
 import net.anawesomguy.allayship.world.FairySavedData;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.core.UUIDUtil;
@@ -20,6 +23,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.component.CustomData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +67,12 @@ public class MagicalAllayship implements ModInitializer {
     public void onInitialize() {
         // noinspection DataFlowIssue
         FabricDefaultAttributeRegistry.register(FAIRY, Fairy.createAttributes());
+        // we should create a networking class if we'll ever have even more networking logic
+        PayloadTypeRegistry.serverboundPlay().register(CallFairyPayload.TYPE, CallFairyPayload.STREAM_CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(CallFairyPayload.TYPE, (payload, context) -> {
+            InteractionHand hand = payload.mainHand() ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
+            AllayshipItem.callFairy(context.player().level(), context.player(), hand);
+        });
 
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
             Entity.RemovalReason removalReason = entity.getRemovalReason();
