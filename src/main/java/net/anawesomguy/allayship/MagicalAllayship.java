@@ -76,6 +76,10 @@ public class MagicalAllayship implements ModInitializer {
 
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
             Entity.RemovalReason removalReason = entity.getRemovalReason();
+            if (removalReason == null) {
+                return;
+            }
+
             if (entity instanceof Fairy && (removalReason.shouldDestroy() || removalReason.shouldSave())) {
                 FairySavedData.getDataFrom(level)
                               .fairyUuidToData()

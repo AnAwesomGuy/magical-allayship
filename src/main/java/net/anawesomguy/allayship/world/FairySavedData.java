@@ -32,7 +32,7 @@ public class FairySavedData extends SavedData {
     }
 
     public FairySavedData(Map<UUID, CompoundTag> map) {
-        this.fairyUuidToData = map;
+        this.fairyUuidToData = new HashMap<>(map);
     }
 
     public Map<UUID, CompoundTag> fairyUuidToData() {
