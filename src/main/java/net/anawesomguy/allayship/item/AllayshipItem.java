@@ -1,8 +1,14 @@
 package net.anawesomguy.allayship.item;
 
+import com.mojang.datafixers.util.Either;
 import net.anawesomguy.allayship.MagicalAllayship;
-import net.minecraft.core.component.DataComponents;
+import net.anawesomguy.allayship.entity.Fairy;
+import net.anawesomguy.allayship.world.FairySavedData;
+import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.ProblemReporter;
@@ -15,15 +21,18 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.TypedEntityData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.TagValueOutput;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @NullMarked
 public class AllayshipItem extends Item {
+    public static final float HEALING_SPEED = 20F; // heals 1 health every this many ticks
+
     private static final List<String> IGNORED_TAGS = List.of(
         "Air",
         "Brain",
@@ -42,7 +51,6 @@ public class AllayshipItem extends Item {
         "Pos",
         "Rotation",
         "sleeping_pos",
-        "hive_pos",
         "Passengers",
         "leash"
     );
@@ -52,32 +60,53 @@ public class AllayshipItem extends Item {
     }
 
     @Override
-    public InteractionResult use(Level level, Player player, InteractionHand hand) {
-        if (player.level().isClientSide())
+    public InteractionResult use(Level l, Player player, InteractionHand hand) {
+        if (!(l instanceof ServerLevel level))
             return InteractionResult.PASS;
         ItemStack held = player.getItemInHand(hand);
-        TypedEntityData<EntityType<?>> entityData = held.remove(DataComponents.ENTITY_DATA);
+        Either<UUID, CompoundTag> entityData = held.remove(MagicalAllayship.FAIRY_DATA_COMPONENT);
         if (entityData == null)
             return InteractionResult.PASS;
-        CompoundTag entityTag = entityData.copyTagWithoutId();
+        CompoundTag entityTag;
+        if (entityData.left().isPresent()) {
+            UUID uuid = entityData.left().get();
+            CompoundTag data = FairySavedData.getDataFrom(level)
+                                             .fairyUuidToData()
+                                             .remove(uuid);
+            if (data == null) { // fairy still exists in world
+                if (level.getEntityInAnyDimension(uuid) instanceof Fairy fairy) {
+                    held.set(MagicalAllayship.FAIRY_DATA_COMPONENT, Either.right(dataFrom(fairy)));
+                    fairy.discard();
+                    return InteractionResult.SUCCESS_SERVER;
+                }
+                player.sendOverlayMessage(Component.translatable("message.magical-allayship.fairy-not-found", uuid)
+                                                   .withStyle(ChatFormatting.RED));
+                return InteractionResult.FAIL;
+            }
+            entityTag = data;
+        } else
+            entityTag = entityData.right().orElseThrow();
+        long capturedTime = Optional.ofNullable(entityTag.remove(Fairy.CURRENT_TIME_KEY))
+                                    .flatMap(Tag::asLong)
+                                    .orElse(0L);
         IGNORED_TAGS.forEach(entityTag::remove);
-        Entity fairy = EntityType.loadEntityRecursive(entityData.type(), entityTag, level, EntitySpawnReason.LOAD, EntityProcessor.NOP);
-        if (fairy == null)
+        Entity entity = EntityType.loadEntityRecursive(MagicalAllayship.FAIRY, entityTag, level,
+                                                       EntitySpawnReason.LOAD, EntityProcessor.NOP);
+        if (!(entity instanceof Fairy fairy))
             return InteractionResult.FAIL;
+        fairy.setHealth(Math.max(fairy.getHealth(), 0F) + ((level.getGameTime() - capturedTime) / HEALING_SPEED));
         fairy.snapTo(player.getEyePosition());
         level.addFreshEntity(fairy);
-        level.playSound(player, fairy, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.NEUTRAL, 2F, 1F);
+        level.playSound(player, fairy, SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.NEUTRAL, 2F, 1F);
         return InteractionResult.SUCCESS_SERVER;
     }
 
-    public static TypedEntityData<EntityType<?>> dataFrom(Entity entity) {
-        try (ProblemReporter.ScopedCollector reporter = new ProblemReporter.ScopedCollector(entity.problemPath(),
-                                                                                            MagicalAllayship.LOGGER)) {
+    public static CompoundTag dataFrom(Entity entity) {
+        try (var reporter = new ProblemReporter.ScopedCollector(entity.problemPath(), MagicalAllayship.LOGGER)) {
             TagValueOutput output = TagValueOutput.createWithContext(reporter, entity.registryAccess());
             entity.save(output);
             IGNORED_TAGS.forEach(output::discard);
-            CompoundTag entityTag = output.buildResult();
-            return TypedEntityData.of(entity.getType(), entityTag);
+            return output.buildResult();
         }
     }
 }

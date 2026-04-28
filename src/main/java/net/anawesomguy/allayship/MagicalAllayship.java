@@ -16,6 +16,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.Item;
@@ -53,7 +54,9 @@ public class MagicalAllayship implements ModInitializer {
     public static final DataComponentType<Either<UUID, CompoundTag>> FAIRY_DATA_COMPONENT = Registry.register(
         BuiltInRegistries.DATA_COMPONENT_TYPE,
         id("fairy_data"),
-        DataComponentType.<Either<UUID, CompoundTag>>builder().persistent(Codec.either(UUIDUtil.CODEC, CustomData.COMPOUND_TAG_CODEC)).build()
+        DataComponentType.<Either<UUID, CompoundTag>>builder()
+                         .persistent(Codec.either(UUIDUtil.CODEC, CustomData.COMPOUND_TAG_CODEC))
+                         .build()
     );
 
     @Override
@@ -62,8 +65,14 @@ public class MagicalAllayship implements ModInitializer {
         FabricDefaultAttributeRegistry.register(FAIRY, Fairy.createAttributes());
 
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
-            if (entity instanceof Fairy)
-                level.getDataStorage().computeIfAbsent(FairySavedData.TYPE).fairyUuidToDespawnAge.put(entity.getUUID(), level.getGameTime());
+            Entity.RemovalReason removalReason = entity.getRemovalReason();
+            if (entity instanceof Fairy && (removalReason.shouldDestroy() || removalReason.shouldSave())) {
+                FairySavedData.getDataFrom(level)
+                              .fairyUuidToData()
+                              .put(entity.getUUID(), AllayshipItem.dataFrom(entity));
+                if (entity.getRemovalReason().shouldSave())
+                    ((Fairy)entity).removeAsDiscarded(); // don't save fairy
+            }
         });
     }
 

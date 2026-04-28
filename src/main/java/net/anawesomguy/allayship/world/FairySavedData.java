@@ -1,35 +1,42 @@
 package net.anawesomguy.allayship.world;
 
 import com.mojang.serialization.Codec;
-import it.unimi.dsi.fastutil.objects.Object2LongMap;
-import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.anawesomguy.allayship.MagicalAllayship;
 import net.minecraft.core.UUIDUtil;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class FairySavedData extends SavedData {
-    public static final Codec<FairySavedData> CODEC = Codec.unboundedMap(UUIDUtil.CODEC, Codec.LONG)
-                                                           .xmap(FairySavedData::new,
-                                                                 FairySavedData::fairyUuidToDespawnAge);
+    public static final Codec<FairySavedData> CODEC =
+        Codec.unboundedMap(UUIDUtil.CODEC, CustomData.COMPOUND_TAG_CODEC)
+             .xmap(FairySavedData::new, fairySavedData -> fairySavedData.fairyUuidToData);
     @SuppressWarnings("DataFlowIssue")
     public static final SavedDataType<FairySavedData> TYPE = new SavedDataType<>(
         MagicalAllayship.id("fairyDespawnData"), FairySavedData::new, CODEC, null);
 
+    public static FairySavedData getDataFrom(ServerLevel level) {
+        return level.getServer().getDataStorage().computeIfAbsent(TYPE);
+    }
+
+    private final Map<UUID, CompoundTag> fairyUuidToData;
+
     public FairySavedData() {
-        this.fairyUuidToDespawnAge = new Object2LongOpenHashMap<>();
+        this.fairyUuidToData = new HashMap<>();
     }
 
-    public FairySavedData(Map<UUID, Long> map) {
-        this.fairyUuidToDespawnAge = new Object2LongOpenHashMap<>(map);
+    public FairySavedData(Map<UUID, CompoundTag> map) {
+        this.fairyUuidToData = map;
     }
 
-    public final Object2LongMap<UUID> fairyUuidToDespawnAge;
-
-    public Object2LongMap<UUID> fairyUuidToDespawnAge() {
-        return fairyUuidToDespawnAge;
+    public Map<UUID, CompoundTag> fairyUuidToData() {
+        setDirty(); // too lazy to write a wrapper for the map so this'll do
+        return fairyUuidToData;
     }
 }

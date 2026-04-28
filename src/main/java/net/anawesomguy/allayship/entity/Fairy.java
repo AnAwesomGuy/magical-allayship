@@ -1,8 +1,8 @@
 package net.anawesomguy.allayship.entity;
 
+import com.mojang.datafixers.util.Either;
 import net.anawesomguy.allayship.MagicalAllayship;
 import net.anawesomguy.allayship.item.AllayshipItem;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -17,14 +17,16 @@ import net.minecraft.world.entity.ai.control.FlyingMoveControl;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
 public class Fairy extends PathfinderMob {
+    public static final String CURRENT_TIME_KEY = "CurrentTime";
+
     public Fairy(EntityType<? extends Fairy> type, Level level) {
         super(type, level);
         this.moveControl = new FlyingMoveControl(this, 20, true);
-
     }
 
     @Override
@@ -41,13 +43,24 @@ public class Fairy extends PathfinderMob {
             this.ejectPassengers();
             this.dropLeash();
             ItemStack stack = MagicalAllayship.ALLAYSHIP.getDefaultInstance();
-            stack.set(DataComponents.ENTITY_DATA, AllayshipItem.dataFrom(this));
+            stack.set(MagicalAllayship.FAIRY_DATA_COMPONENT, Either.right(AllayshipItem.dataFrom(this)));
             BehaviorUtils.throwItem(this, stack, position().add(0, 0.5, 0));
             this.level().playSound(player, this, SoundEvents.ALLAY_THROW, SoundSource.NEUTRAL, 2F, 1F);
             this.discard();
             return InteractionResult.SUCCESS;
         }
         return super.mobInteract(player, hand);
+    }
+
+    @Override
+    protected void addAdditionalSaveData(ValueOutput output) {
+        super.addAdditionalSaveData(output);
+        output.putLong("CurrentTime", this.level().getGameTime());
+    }
+
+    public void removeAsDiscarded() {
+        this.unsetRemoved();
+        this.setRemoved(RemovalReason.DISCARDED);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
