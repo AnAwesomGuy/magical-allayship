@@ -13,7 +13,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityProcessor;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -59,18 +58,13 @@ public class AllayshipItem extends Item {
         super(properties);
     }
 
-    @Override
-    public InteractionResult use(Level l, Player player, InteractionHand hand) {
-        return InteractionResult.PASS;
-    }
-
-    public static InteractionResult callFairy(Level l, Player player, InteractionHand hand) {
+    public static void callFairy(Level l, Player player, InteractionHand hand) {
         if (!(l instanceof ServerLevel level))
-            return InteractionResult.PASS;
+            return;
         ItemStack held = player.getItemInHand(hand);
         Either<UUID, CompoundTag> entityData = held.remove(MagicalAllayship.FAIRY_DATA_COMPONENT);
         if (entityData == null)
-            return InteractionResult.PASS;
+            return;
         CompoundTag entityTag;
         if (entityData.left().isPresent()) {
             UUID uuid = entityData.left().get();
@@ -81,11 +75,11 @@ public class AllayshipItem extends Item {
                 if (level.getEntityInAnyDimension(uuid) instanceof Fairy fairy) {
                     held.set(MagicalAllayship.FAIRY_DATA_COMPONENT, Either.right(dataFrom(fairy)));
                     fairy.discard();
-                    return InteractionResult.SUCCESS_SERVER;
+                    return;
                 }
                 player.sendOverlayMessage(Component.translatable("message.magical-allayship.fairy-not-found", uuid)
                                                    .withStyle(ChatFormatting.RED));
-                return InteractionResult.FAIL;
+                return;
             }
             entityTag = data;
         } else
@@ -97,12 +91,12 @@ public class AllayshipItem extends Item {
         Entity entity = EntityType.loadEntityRecursive(MagicalAllayship.FAIRY, entityTag, level,
                                                        EntitySpawnReason.LOAD, EntityProcessor.NOP);
         if (!(entity instanceof Fairy fairy))
-            return InteractionResult.FAIL;
-        fairy.setHealth(Math.max(fairy.getHealth(), 0F) + ((level.getGameTime() - capturedTime) / HEALING_SPEED));
+            return;
+        fairy.setHealth(Math.max(fairy.getHealth(), 0F) +
+                            ((level.getServer().overworld().getGameTime() - capturedTime) / HEALING_SPEED));
         fairy.snapTo(player.getEyePosition());
         level.addFreshEntity(fairy);
         level.playSound(player, fairy, SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.NEUTRAL, 2F, 1F);
-        return InteractionResult.SUCCESS_SERVER;
     }
 
     public static CompoundTag dataFrom(Entity entity) {

@@ -3,6 +3,7 @@ package net.anawesomguy.allayship.entity;
 import com.mojang.datafixers.util.Either;
 import net.anawesomguy.allayship.MagicalAllayship;
 import net.anawesomguy.allayship.item.AllayshipItem;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -55,7 +56,9 @@ public class Fairy extends PathfinderMob {
     @Override
     protected void addAdditionalSaveData(ValueOutput output) {
         super.addAdditionalSaveData(output);
-        output.putLong("CurrentTime", this.level().getGameTime());
+        MinecraftServer server = this.level().getServer();
+        if (server != null)
+            output.putLong("CurrentTime", server.overworld().getGameTime());
     }
 
     public void removeAsDiscarded() {

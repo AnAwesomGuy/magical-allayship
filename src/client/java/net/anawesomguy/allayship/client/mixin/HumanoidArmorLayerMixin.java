@@ -12,10 +12,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(HumanoidArmorLayer.class)
-public class HumanoidArmorLayerMixin {
-    @Inject(method = "submit", at = @At("HEAD"), cancellable = true)
+public abstract class HumanoidArmorLayerMixin {
+    @Inject(method = "submit(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;ILnet/minecraft/client/renderer/entity/state/HumanoidRenderState;FF)V", at = @At("HEAD"), cancellable = true)
     private void hideArmorWhenSuit(PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, HumanoidRenderState state, float yRot, float xRot, CallbackInfo ci) {
-        if (state instanceof AvatarRenderState avatarState && MagicalAllayshipClient.TRANSFORMED_PLAYERS.contains(avatarState.id)) {
+        if (state instanceof AvatarRenderState avatarState && avatarState.getData(MagicalAllayshipClient.SUIT_TYPE_KEY) != null) {
             ci.cancel();
         }
     }

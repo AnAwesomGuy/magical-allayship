@@ -3,12 +3,15 @@ package net.anawesomguy.allayship;
 import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import net.anawesomguy.allayship.entity.Fairy;
+import net.anawesomguy.allayship.entity.SuitData;
 import net.anawesomguy.allayship.item.AllayshipItem;
 import net.anawesomguy.allayship.network.CallFairyPayload;
 import net.anawesomguy.allayship.network.RequestTransformationPayload;
-import net.anawesomguy.allayship.network.SetTransformationPayload;
 import net.anawesomguy.allayship.world.FairySavedData;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -21,13 +24,13 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
-import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +40,6 @@ import java.util.function.Function;
 public class MagicalAllayship implements ModInitializer {
     public static final String MOD_ID = "magical-allayship";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-    public static final String ALLAYSUIT_TAG = "allaysuit";
 
     public static final Identifier FAIRY_ID = Identifier.fromNamespaceAndPath(MOD_ID, "fairy");
     public static final EntityType<Fairy> FAIRY;
@@ -66,40 +68,39 @@ public class MagicalAllayship implements ModInitializer {
                          .persistent(Codec.either(UUIDUtil.CODEC, CustomData.COMPOUND_TAG_CODEC))
                          .build()
     );
+    public static final AttachmentType<SuitData> SUIT_COMPONENT = AttachmentRegistry.create(
+        id("suit_data"),
+        builder -> builder.persistent(SuitData.CODEC).syncWith(SuitData.STREAM_CODEC, AttachmentSyncPredicate.all())
+    );
 
     @Override
     public void onInitialize() {
         // noinspection DataFlowIssue
         FabricDefaultAttributeRegistry.register(FAIRY, Fairy.createAttributes());
+
+        // NETWORKING
         // we should create a networking class if we'll ever have even more networking logic
         PayloadTypeRegistry.serverboundPlay().register(CallFairyPayload.TYPE, CallFairyPayload.STREAM_CODEC);
-        PayloadTypeRegistry.serverboundPlay().register(RequestTransformationPayload.TYPE, RequestTransformationPayload.STREAM_CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(SetTransformationPayload.TYPE, SetTransformationPayload.STREAM_CODEC);
-
+        PayloadTypeRegistry.serverboundPlay()
+                           .register(RequestTransformationPayload.TYPE, RequestTransformationPayload.STREAM_CODEC);
         ServerPlayNetworking.registerGlobalReceiver(CallFairyPayload.TYPE, (payload, context) -> {
             InteractionHand hand = payload.mainHand() ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
             AllayshipItem.callFairy(context.player().level(), context.player(), hand);
         });
-
         ServerPlayNetworking.registerGlobalReceiver(RequestTransformationPayload.TYPE, (payload, context) -> {
             InteractionHand hand = payload.mainHand() ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
-            if (context.player().getItemInHand(hand).getItem() != ALLAYSHIP) {
+            ItemStack item = context.player().getItemInHand(hand);
+            if (item.is(ALLAYSHIP))
                 return;
-            }
 
-            if (context.player().entityTags().contains(ALLAYSUIT_TAG)) {
-                context.player().removeTag(ALLAYSUIT_TAG);
-            } else {
-                context.player().addTag(ALLAYSUIT_TAG);
-            }
-
-            boolean transformed = context.player().entityTags().contains(ALLAYSUIT_TAG);
-            SetTransformationPayload setTransformationPayload = new SetTransformationPayload(context.player().getId(), transformed);
-            for (ServerPlayer player : context.player().level().getServer().getPlayerList().getPlayers()) {
-                ServerPlayNetworking.send(player, setTransformationPayload);
-            }
+            if (context.player().hasAttached(SUIT_COMPONENT)) {
+                context.player().setAttached(
+                    SUIT_COMPONENT, new SuitData(SuitData.SuitType.PINK, context.server().overworld().getGameTime()));
+            } else
+                context.player().removeAttached(SUIT_COMPONENT);
         });
 
+        // store unloaded fairies to level data
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
             Entity.RemovalReason removalReason = entity.getRemovalReason();
             if (removalReason == null) {
