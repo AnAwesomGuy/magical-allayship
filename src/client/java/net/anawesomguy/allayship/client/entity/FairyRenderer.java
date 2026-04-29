@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.client.renderer.entity.state.AllayRenderState;
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import org.jspecify.annotations.NullMarked;
 
@@ -33,5 +34,10 @@ public class FairyRenderer extends MobRenderer<Fairy, AllayRenderState, AllayMod
     @Override
     public AllayRenderState createRenderState() {
         return new AllayRenderState();
+    }
+
+    @Override
+    protected int getBlockLightLevel(Fairy entity, BlockPos blockPos) {
+        return 15;
     }
 }
