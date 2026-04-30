@@ -90,7 +90,7 @@ public class MagicalAllayship implements ModInitializer {
         ServerPlayNetworking.registerGlobalReceiver(RequestTransformationPayload.TYPE, (payload, context) -> {
             InteractionHand hand = payload.mainHand() ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
             ItemStack item = context.player().getItemInHand(hand);
-            if (item.is(ALLAYSHIP))
+            if (!item.is(ALLAYSHIP))
                 return;
 
             if (context.player().hasAttached(SUIT_COMPONENT)) {
@@ -108,6 +108,7 @@ public class MagicalAllayship implements ModInitializer {
             }
 
             if (entity instanceof Fairy && (removalReason.shouldDestroy() || removalReason.shouldSave())) {
+                if (entity.entityTags().contains(Fairy.IN_ALLAYSHIP_TAG)) return;
                 FairySavedData.getDataFrom(level)
                               .fairyUuidToData()
                               .put(entity.getUUID(), AllayshipItem.dataFrom(entity));

@@ -73,8 +73,8 @@ public class AllayshipItem extends Item {
                                              .remove(uuid);
             if (data == null) { // fairy still exists in world
                 if (level.getEntityInAnyDimension(uuid) instanceof Fairy fairy) {
-                    held.set(MagicalAllayship.FAIRY_DATA_COMPONENT, Either.right(dataFrom(fairy)));
-                    fairy.discard();
+                    held.set(MagicalAllayship.FAIRY_DATA_COMPONENT, Either.left(uuid));
+                    fairy.setState(player, true);
                     return;
                 }
                 player.sendOverlayMessage(Component.translatable("message.magical-allayship.fairy-not-found", uuid)
@@ -92,10 +92,12 @@ public class AllayshipItem extends Item {
                                                        EntitySpawnReason.LOAD, EntityProcessor.NOP);
         if (!(entity instanceof Fairy fairy))
             return;
+        fairy.setState(player, false);
         fairy.setHealth(Math.max(fairy.getHealth(), 0F) +
                             ((level.getServer().overworld().getGameTime() - capturedTime) / HEALING_SPEED));
         fairy.snapTo(player.getEyePosition());
         level.addFreshEntity(fairy);
+        held.set(MagicalAllayship.FAIRY_DATA_COMPONENT, Either.left(fairy.getUUID()));
         level.playSound(player, fairy, SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.NEUTRAL, 2F, 1F);
     }
 
