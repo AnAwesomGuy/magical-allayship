@@ -20,5 +20,9 @@ public class EnglishLanguageProvider extends FabricLanguageProvider {
         builder.add(MagicalAllayship.ALLAYSHIP, "Allayship");
 
         builder.add("message.magical-allayship.fairy-not-found", "Could not find fairy with UUID: %s!");
+        builder.add("tooltip.magical-allayship.transform", "Transform");
+        builder.add("tooltip.magical-allayship.guide", "Guide");
+        builder.add("tooltip.magical-allayship.fairy", "Call Fairy");
+        builder.add("tooltip.magical-allayship.settings", "Info & Settings");
     }
 }

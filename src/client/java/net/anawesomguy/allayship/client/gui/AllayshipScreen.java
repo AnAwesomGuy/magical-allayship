@@ -18,10 +18,10 @@ import org.lwjgl.glfw.GLFW;
 import java.io.IOException;
 
 public class AllayshipScreen extends Screen {
-    private final Button transformButton = new Button(1, 28, 29, 34, 32);
-    private final Button guideButton = new Button(2, 22, 27, 14, 19);
-    private final Button fairyButton = new Button(3, 28, 20, 33, 10);
-    private final Button settingsButton = new Button(4, 22, 27, 59, 19);
+    private final Button transformButton = new Button(1, 28, 29, 34, 32, Component.translatable("tooltip.magical-allayship.transform"));
+    private final Button guideButton = new Button(2, 22, 27, 14, 19, Component.translatable("tooltip.magical-allayship.guide"));
+    private final Button fairyButton = new Button(3, 28, 20, 33, 10, Component.translatable("tooltip.magical-allayship.fairy"));
+    private final Button settingsButton = new Button(4, 22, 27, 59, 19, Component.translatable("tooltip.magical-allayship.settings"));
     private final Button[] buttons = {this.transformButton, this.guideButton, this.fairyButton, this.settingsButton};
     private final InteractionHand hand;
     private Button pressedButton;
@@ -64,6 +64,9 @@ public class AllayshipScreen extends Screen {
             }
 
             graphics.blit(RenderPipelines.GUI_TEXTURED, texture, button.x, button.y, 0.0F, 0.0F, button.width, button.height, button.width, button.height);
+            if (button.isOverMask(mouseX, mouseY)) {
+                graphics.setTooltipForNextFrame(this.font, button.tooltip, mouseX, mouseY);
+            }
         }
     }
 
@@ -124,6 +127,7 @@ public class AllayshipScreen extends Screen {
         private final Identifier texture;
         private final Identifier pressedTexture;
         private final Identifier regionTexture;
+        private final Component tooltip;
         private final int width;
         private final int height;
         private final int offsetX;
@@ -133,10 +137,11 @@ public class AllayshipScreen extends Screen {
         private int x;
         private int y;
 
-        private Button(int id, int width, int height, int offsetX, int offsetY) {
+        private Button(int id, int width, int height, int offsetX, int offsetY, Component tooltip) {
             this.texture = textureId(id, "_0");
             this.pressedTexture = textureId(id, "_1");
             this.regionTexture = textureId(id, "_region");
+            this.tooltip = tooltip;
             this.width = width;
             this.height = height;
             this.offsetX = offsetX;

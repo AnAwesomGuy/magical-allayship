@@ -2,5 +2,9 @@
   "entity.magical-allayship.fairy": "Fairy",
   "item.magical-allayship.allayship": "Allayship",
   "item.magical-allayship.heart_diamond": "Heart Diamond",
-  "message.magical-allayship.fairy-not-found": "Could not find fairy with UUID: %s!"
+  "message.magical-allayship.fairy-not-found": "Could not find fairy with UUID: %s!",
+  "tooltip.magical-allayship.fairy": "Call Fairy",
+  "tooltip.magical-allayship.guide": "Guide",
+  "tooltip.magical-allayship.settings": "Info & Settings",
+  "tooltip.magical-allayship.transform": "Transform"
 }
