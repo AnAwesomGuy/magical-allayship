@@ -36,7 +36,7 @@ public class MagicalAllayshipClient implements ClientModInitializer {
             });
 
         UseItemCallback.EVENT.register((player, level, hand) -> {
-            if (!level.isClientSide() || player.getItemInHand(hand).is(MagicalAllayship.ALLAYSHIP)) {
+            if (!level.isClientSide() || !player.getItemInHand(hand).is(MagicalAllayship.ALLAYSHIP)) {
                 return InteractionResult.PASS;
             }
 

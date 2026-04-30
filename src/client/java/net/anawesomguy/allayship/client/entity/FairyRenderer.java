@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.client.renderer.entity.state.AllayRenderState;
+import net.minecraft.client.renderer.entity.state.ArmedEntityRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import org.jspecify.annotations.NullMarked;
@@ -29,6 +30,7 @@ public class FairyRenderer extends MobRenderer<Fairy, AllayRenderState, AllayMod
     @Override
     public void extractRenderState(Fairy entity, AllayRenderState state, float partialTicks) {
         super.extractRenderState(entity, state, partialTicks);
+        ArmedEntityRenderState.extractArmedEntityRenderState(entity, state, this.itemModelResolver, partialTicks);
     }
 
     @Override

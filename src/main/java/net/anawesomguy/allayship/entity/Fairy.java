@@ -3,6 +3,7 @@ package net.anawesomguy.allayship.entity;
 import com.mojang.datafixers.util.Either;
 import net.anawesomguy.allayship.MagicalAllayship;
 import net.anawesomguy.allayship.item.AllayshipItem;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -33,6 +34,15 @@ public class Fairy extends PathfinderMob {
     @Override
     protected void registerGoals() {
         super.registerGoals();
+    }
+
+    @Override
+    public void aiStep() {
+        super.aiStep();
+        if (this.level().isClientSide() && random.nextInt(10) == 0)
+            this.level().addParticle(
+                ParticleTypes.END_ROD, this.getX(), this.getY() - 0.05, this.getZ(),
+                random.nextGaussian() * 0.005, random.nextGaussian() * -0.1, random.nextGaussian() * 0.005);
     }
 
     @Override
