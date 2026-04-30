@@ -94,10 +94,10 @@ public class MagicalAllayship implements ModInitializer {
                 return;
 
             if (context.player().hasAttached(SUIT_COMPONENT)) {
+                context.player().removeAttached(SUIT_COMPONENT);
+            } else
                 context.player().setAttached(
                     SUIT_COMPONENT, new SuitData(SuitData.SuitType.PINK, context.server().overworld().getGameTime()));
-            } else
-                context.player().removeAttached(SUIT_COMPONENT);
         });
 
         // store unloaded fairies to level data
