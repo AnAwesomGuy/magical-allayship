@@ -7,6 +7,7 @@ import net.anawesomguy.allayship.entity.SuitData;
 import net.anawesomguy.allayship.item.AllayshipItem;
 import net.anawesomguy.allayship.network.CallFairyPayload;
 import net.anawesomguy.allayship.network.RequestTransformationPayload;
+import net.anawesomguy.allayship.network.SetFairyNamePayload;
 import net.anawesomguy.allayship.world.FairySavedData;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
@@ -83,6 +84,7 @@ public class MagicalAllayship implements ModInitializer {
         PayloadTypeRegistry.serverboundPlay().register(CallFairyPayload.TYPE, CallFairyPayload.STREAM_CODEC);
         PayloadTypeRegistry.serverboundPlay()
                            .register(RequestTransformationPayload.TYPE, RequestTransformationPayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(SetFairyNamePayload.TYPE, SetFairyNamePayload.STREAM_CODEC);
         ServerPlayNetworking.registerGlobalReceiver(CallFairyPayload.TYPE, (payload, context) -> {
             InteractionHand hand = payload.mainHand() ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
             AllayshipItem.callFairy(context.player().level(), context.player(), hand);
@@ -100,6 +102,10 @@ public class MagicalAllayship implements ModInitializer {
                 suitData.addTo(context.player());
                 context.player().setAttached(SUIT_ATTACHMENT, suitData);
             }
+        });
+        ServerPlayNetworking.registerGlobalReceiver(SetFairyNamePayload.TYPE, (payload, context) -> {
+            InteractionHand hand = payload.mainHand() ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
+            AllayshipItem.setFairyName(context.player().level(), context.player(), hand, payload.name());
         });
 
         // store unloaded fairies to level data

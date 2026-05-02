@@ -4,10 +4,12 @@ import com.mojang.datafixers.util.Either;
 import net.anawesomguy.allayship.MagicalAllayship;
 import net.anawesomguy.allayship.entity.Fairy;
 import net.anawesomguy.allayship.world.FairySavedData;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -104,6 +106,38 @@ public class AllayshipItem extends Item {
         level.playSound(player, fairy, SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.NEUTRAL, 2F, 1F);
     }
 
+    public static void setFairyName(ServerLevel level, ServerPlayer player, InteractionHand hand, String name) {
+        ItemStack held = player.getItemInHand(hand);
+        if (!held.is(MagicalAllayship.ALLAYSHIP)) {
+            return;
+        }
+
+        Either<UUID, CompoundTag> entityData = held.get(MagicalAllayship.FAIRY_DATA_COMPONENT);
+        if (entityData == null) {
+            return;
+        }
+
+        String trimmedName = name.trim();
+        if (entityData.left().isPresent()) {
+            UUID uuid = entityData.left().get();
+            if (level.getEntityInAnyDimension(uuid) instanceof Fairy fairy) {
+                fairy.setCustomName(trimmedName.isBlank() ? null : Component.literal(trimmedName));
+                fairy.setCustomNameVisible(!trimmedName.isBlank());
+            }
+
+            CompoundTag data = FairySavedData.getDataFrom(level).fairyUuidToData().get(uuid);
+            if (data != null) {
+                setName(data, trimmedName);
+            }
+
+            return;
+        }
+
+        CompoundTag data = entityData.right().orElseThrow();
+        setName(data, trimmedName);
+        held.set(MagicalAllayship.FAIRY_DATA_COMPONENT, Either.right(data));
+    }
+
     public static CompoundTag dataFrom(Entity entity) {
         try (var reporter = new ProblemReporter.ScopedCollector(entity.problemPath(), MagicalAllayship.LOGGER)) {
             TagValueOutput output = TagValueOutput.createWithContext(reporter, entity.registryAccess());
@@ -121,5 +155,18 @@ public class AllayshipItem extends Item {
             player.level().getEntityInAnyDimension(entityData.left().get()) instanceof Fairy fairy) {
             fairy.setState(player, false);
         }
+    }
+
+    private static void setName(CompoundTag data, String name) {
+        if (name.isBlank()) {
+            data.remove("CustomName");
+            data.remove("CustomNameVisible");
+            return;
+        }
+
+        ComponentSerialization.CODEC.encodeStart(NbtOps.INSTANCE, Component.literal(name))
+                                    .result()
+                                    .ifPresent(tag -> data.put("CustomName", tag));
+        data.putBoolean("CustomNameVisible", true);
     }
 }

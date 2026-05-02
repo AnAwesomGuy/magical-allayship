@@ -24,5 +24,8 @@ public class EnglishLanguageProvider extends FabricLanguageProvider {
         builder.add("tooltip.magical-allayship.guide", "Guide");
         builder.add("tooltip.magical-allayship.fairy", "Call Fairy");
         builder.add("tooltip.magical-allayship.settings", "Info & Settings");
+        builder.add("gui.magical-allayship.name", "Name");
+        builder.add("gui.magical-allayship.health", "Health");
+        builder.add("gui.magical-allayship.health_called", "Called out");
     }
 }

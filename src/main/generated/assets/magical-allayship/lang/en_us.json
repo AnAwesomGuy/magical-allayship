@@ -1,5 +1,8 @@
 {
   "entity.magical-allayship.fairy": "Fairy",
+  "gui.magical-allayship.health": "Health",
+  "gui.magical-allayship.health_called": "Called out",
+  "gui.magical-allayship.name": "Name",
   "item.magical-allayship.allayship": "Allayship",
   "item.magical-allayship.heart_diamond": "Heart Diamond",
   "message.magical-allayship.fairy-not-found": "Could not find fairy with UUID: %s!",
