@@ -9,6 +9,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.ProblemReporter;
@@ -20,12 +21,10 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.TagValueOutput;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @NullMarked
@@ -51,16 +50,16 @@ public class AllayshipItem extends Item {
         "Rotation",
         "sleeping_pos",
         "Passengers",
-        "leash"
+        "leash",
+        Fairy.OWNER_KEY,
+        Fairy.RETURNING_KEY
     );
 
     public AllayshipItem(Properties properties) {
         super(properties);
     }
 
-    public static void callFairy(Level l, Player player, InteractionHand hand) {
-        if (!(l instanceof ServerLevel level))
-            return;
+    public static void callFairy(ServerLevel level, ServerPlayer player, InteractionHand hand) {
         ItemStack held = player.getItemInHand(hand);
         Either<UUID, CompoundTag> entityData = held.remove(MagicalAllayship.FAIRY_DATA_COMPONENT);
         if (entityData == null)
@@ -71,9 +70,9 @@ public class AllayshipItem extends Item {
             CompoundTag data = FairySavedData.getDataFrom(level)
                                              .fairyUuidToData()
                                              .remove(uuid);
-            if (data == null) { // fairy still exists in world
+            if (data == null) { // fairy still exists in world, so recall it
                 if (level.getEntityInAnyDimension(uuid) instanceof Fairy fairy) {
-                    held.set(MagicalAllayship.FAIRY_DATA_COMPONENT, Either.left(uuid));
+                    held.set(MagicalAllayship.FAIRY_DATA_COMPONENT, entityData);
                     fairy.setState(player, true);
                     return;
                 }
@@ -84,9 +83,13 @@ public class AllayshipItem extends Item {
             entityTag = data;
         } else
             entityTag = entityData.right().orElseThrow();
-        long capturedTime = Optional.ofNullable(entityTag.remove(Fairy.CURRENT_TIME_KEY))
-                                    .flatMap(Tag::asLong)
-                                    .orElse(0L);
+
+        long capturedTime = 0L;
+        Tag oldTimeTag = entityTag.remove(Fairy.CURRENT_TIME_KEY);
+        if (oldTimeTag != null)
+            capturedTime = oldTimeTag.asLong().orElse(0L);
+
+        // summon fairy
         IGNORED_TAGS.forEach(entityTag::remove);
         Entity entity = EntityType.loadEntityRecursive(MagicalAllayship.FAIRY, entityTag, level,
                                                        EntitySpawnReason.LOAD, EntityProcessor.NOP);
@@ -107,6 +110,16 @@ public class AllayshipItem extends Item {
             entity.save(output);
             IGNORED_TAGS.forEach(output::discard);
             return output.buildResult();
+        }
+    }
+
+    // called in InventoryMixin
+    public void onAddToInventory(ItemStack stack, Player player) {
+        Either<UUID, CompoundTag> entityData = stack.get(MagicalAllayship.FAIRY_DATA_COMPONENT);
+        if (entityData != null &&
+            entityData.left().isPresent() &&
+            player.level().getEntityInAnyDimension(entityData.left().get()) instanceof Fairy fairy) {
+            fairy.setState(player, false);
         }
     }
 }

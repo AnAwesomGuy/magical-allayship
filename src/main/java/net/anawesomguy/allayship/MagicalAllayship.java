@@ -68,7 +68,7 @@ public class MagicalAllayship implements ModInitializer {
                          .persistent(Codec.either(UUIDUtil.CODEC, CustomData.COMPOUND_TAG_CODEC))
                          .build()
     );
-    public static final AttachmentType<SuitData> SUIT_COMPONENT = AttachmentRegistry.create(
+    public static final AttachmentType<SuitData> SUIT_ATTACHMENT = AttachmentRegistry.create(
         id("suit_data"),
         builder -> builder.persistent(SuitData.CODEC).syncWith(SuitData.STREAM_CODEC, AttachmentSyncPredicate.all())
     );
@@ -93,11 +93,13 @@ public class MagicalAllayship implements ModInitializer {
             if (!item.is(ALLAYSHIP))
                 return;
 
-            if (context.player().hasAttached(SUIT_COMPONENT)) {
-                context.player().removeAttached(SUIT_COMPONENT);
-            } else
-                context.player().setAttached(
-                    SUIT_COMPONENT, new SuitData(SuitData.SuitType.PINK, context.server().overworld().getGameTime()));
+            if (context.player().hasAttached(SUIT_ATTACHMENT)) {
+                context.player().removeAttached(SUIT_ATTACHMENT).removeFrom(context.player());
+            } else {
+                SuitData suitData = new SuitData(SuitData.SuitType.PINK, context.server().overworld().getGameTime());
+                suitData.addTo(context.player());
+                context.player().setAttached(SUIT_ATTACHMENT, suitData);
+            }
         });
 
         // store unloaded fairies to level data
@@ -107,13 +109,14 @@ public class MagicalAllayship implements ModInitializer {
                 return;
             }
 
-            if (entity instanceof Fairy && (removalReason.shouldDestroy() || removalReason.shouldSave())) {
-                if (entity.entityTags().contains(Fairy.IN_ALLAYSHIP_TAG)) return;
+            if (entity instanceof Fairy fairy &&
+                (removalReason.shouldDestroy() || removalReason.shouldSave()) &&
+                !fairy.entityTags().contains(Fairy.IN_ALLAYSHIP_TAG)) {
                 FairySavedData.getDataFrom(level)
                               .fairyUuidToData()
-                              .put(entity.getUUID(), AllayshipItem.dataFrom(entity));
-                if (entity.getRemovalReason().shouldSave())
-                    ((Fairy)entity).removeAsDiscarded(); // don't save fairy
+                              .put(fairy.getUUID(), AllayshipItem.dataFrom(fairy));
+                if (removalReason.shouldSave())
+                    fairy.removeAsDiscarded(); // don't save fairy
             }
         });
     }

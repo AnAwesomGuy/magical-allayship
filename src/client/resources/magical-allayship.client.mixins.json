@@ -2,11 +2,12 @@
   "required": true,
   "package": "net.anawesomguy.allayship.client.mixin",
   "compatibilityLevel": "JAVA_25",
-  "client": ["AvatarRendererMixin", "HumanoidArmorLayerMixin"],
+  "client": ["AvatarRendererMixin", "GuiMixin", "HumanoidArmorLayerMixin"],
   "injectors": {
     "defaultRequire": 1
   },
   "overwrites": {
     "requireAnnotations": true
-  }
+  },
+  "mixinextras": {"minVersion": "0.5.4"}
 }

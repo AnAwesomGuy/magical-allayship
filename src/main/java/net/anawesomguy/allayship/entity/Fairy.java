@@ -5,8 +5,8 @@ import net.anawesomguy.allayship.MagicalAllayship;
 import net.anawesomguy.allayship.item.AllayshipItem;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -26,16 +26,18 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.UUID;
 
 @NullMarked
 public class Fairy extends PathfinderMob {
     public static final String CURRENT_TIME_KEY = "CurrentTime";
-    private static final String OWNER_KEY = "Owner";
-    private static final String RETURNING_KEY = "Returning";
+    public static final String OWNER_KEY = "Owner";
+    public static final String RETURNING_KEY = "Returning";
     public static final String IN_ALLAYSHIP_TAG = "InAllayship";
 
+    @Nullable
     private UUID owner;
     private boolean returning;
 
@@ -58,12 +60,12 @@ public class Fairy extends PathfinderMob {
                 random.nextGaussian() * 0.005, random.nextGaussian() * -0.1, random.nextGaussian() * 0.005);
     }
 
+    // MOB AI
     // p.s. I tried using goals but it ended up being even more effort
     // so this should do I hope
     @Override
-    public void tick() {
-        super.tick();
-        if (!(this.level() instanceof ServerLevel level) || this.owner == null) {
+    protected void customServerAiStep(ServerLevel level) {
+        if (this.owner == null) {
             return;
         }
 
@@ -76,10 +78,10 @@ public class Fairy extends PathfinderMob {
         if (this.returning) {
             Vec3 look = owner.getLookAngle();
             Vec3 side = new Vec3(-look.z, 0, look.x).normalize().scale(0.45);
-            Vec3 target = owner.position().add(side).add(0, 0.9, 0);
+            Vec3 target = owner.getEyePosition().add(side);
             Vec3 movement = target.subtract(this.position());
             // return speed when going back into the allayship
-            if (movement.lengthSqr() > 0.18 * 0.18) {
+            if (movement.lengthSqr() > (0.18 * 0.18)) {
                 movement = movement.normalize().scale(0.18);
             }
 
@@ -92,7 +94,7 @@ public class Fairy extends PathfinderMob {
                     }
 
                     Either<UUID, CompoundTag> data = held.get(MagicalAllayship.FAIRY_DATA_COMPONENT);
-                    if (data == null || !data.left().filter(this.getUUID()::equals).isPresent()) {
+                    if (data == null || data.left().filter(this.getUUID()::equals).isEmpty()) {
                         continue;
                     }
 
@@ -110,7 +112,7 @@ public class Fairy extends PathfinderMob {
         Vec3 side = new Vec3(-look.z, 0, look.x).normalize().scale(1.5);
         Vec3 target = owner.position().add(side).add(0, 1 + Math.sin(this.tickCount / 10D) * 0.2, 0);
         Vec3 movement = target.subtract(this.position());
-        if (movement.lengthSqr() > 0.10 * 0.10) {
+        if (movement.lengthSqr() > (0.10 * 0.10)) {
             movement = movement.normalize().scale(0.10);
         }
 

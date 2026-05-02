@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class AvatarRendererMixin {
     @Inject(method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V", at = @At("RETURN"))
     private void addAllaysuitToState(Avatar entity, AvatarRenderState state, float partialTicks, CallbackInfo ci) {
-        SuitData suitData = entity.getAttached(MagicalAllayship.SUIT_COMPONENT);
+        SuitData suitData = entity.getAttached(MagicalAllayship.SUIT_ATTACHMENT);
         if (suitData != null)
             state.setData(MagicalAllayshipClient.SUIT_TYPE_KEY, suitData.type());
     }
