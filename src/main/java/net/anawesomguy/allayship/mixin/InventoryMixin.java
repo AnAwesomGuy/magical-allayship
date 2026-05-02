@@ -10,6 +10,8 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Inventory.class)
 public abstract class InventoryMixin {
@@ -22,5 +24,14 @@ public abstract class InventoryMixin {
         if (original && itemStack.is(MagicalAllayship.ALLAYSHIP))
             ((AllayshipItem)itemStack.getItem()).onAddToInventory(itemStack, this.player);
         return original;
+    }
+
+    @Inject(method = "load", at = @At("RETURN"))
+    private void onInventoryLoad(CallbackInfo ci) {
+        for (ItemStack itemStack : ((Inventory)(Object)this).getNonEquipmentItems()) {
+            if (itemStack.is(MagicalAllayship.ALLAYSHIP)) {
+                ((AllayshipItem)itemStack.getItem()).onAddToInventory(itemStack, this.player);
+            }
+        }
     }
 }

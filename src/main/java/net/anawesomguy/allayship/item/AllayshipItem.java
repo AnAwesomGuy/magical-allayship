@@ -69,15 +69,19 @@ public class AllayshipItem extends Item {
         CompoundTag entityTag;
         if (entityData.left().isPresent()) {
             UUID uuid = entityData.left().get();
+            if (level.getEntityInAnyDimension(uuid) instanceof Fairy fairy) {
+                FairySavedData.getDataFrom(level)
+                              .fairyUuidToData()
+                              .remove(uuid);
+                held.set(MagicalAllayship.FAIRY_DATA_COMPONENT, entityData);
+                fairy.setState(player, true);
+                return;
+            }
+
             CompoundTag data = FairySavedData.getDataFrom(level)
-                                             .fairyUuidToData()
-                                             .remove(uuid);
-            if (data == null) { // fairy still exists in world, so recall it
-                if (level.getEntityInAnyDimension(uuid) instanceof Fairy fairy) {
-                    held.set(MagicalAllayship.FAIRY_DATA_COMPONENT, entityData);
-                    fairy.setState(player, true);
-                    return;
-                }
+                                            .fairyUuidToData()
+                                            .remove(uuid);
+            if (data == null) {
                 player.sendOverlayMessage(Component.translatable("message.magical-allayship.fairy-not-found", uuid)
                                                    .withStyle(ChatFormatting.RED));
                 return;
@@ -118,6 +122,7 @@ public class AllayshipItem extends Item {
         }
 
         String trimmedName = name.trim();
+        CompoundTag data;
         if (entityData.left().isPresent()) {
             UUID uuid = entityData.left().get();
             if (level.getEntityInAnyDimension(uuid) instanceof Fairy fairy) {
@@ -125,7 +130,7 @@ public class AllayshipItem extends Item {
                 fairy.setCustomNameVisible(!trimmedName.isBlank());
             }
 
-            CompoundTag data = FairySavedData.getDataFrom(level).fairyUuidToData().get(uuid);
+            data = FairySavedData.getDataFrom(level).fairyUuidToData().get(uuid);
             if (data != null) {
                 setName(data, trimmedName);
             }
@@ -133,7 +138,7 @@ public class AllayshipItem extends Item {
             return;
         }
 
-        CompoundTag data = entityData.right().orElseThrow();
+        data = entityData.right().orElseThrow();
         setName(data, trimmedName);
         held.set(MagicalAllayship.FAIRY_DATA_COMPONENT, Either.right(data));
     }
@@ -149,12 +154,36 @@ public class AllayshipItem extends Item {
 
     // called in InventoryMixin
     public void onAddToInventory(ItemStack stack, Player player) {
-        Either<UUID, CompoundTag> entityData = stack.get(MagicalAllayship.FAIRY_DATA_COMPONENT);
-        if (entityData != null &&
-            entityData.left().isPresent() &&
-            player.level().getEntityInAnyDimension(entityData.left().get()) instanceof Fairy fairy) {
-            fairy.setState(player, false);
+        if (!(player.level() instanceof ServerLevel level)) {
+            return;
         }
+
+        Either<UUID, CompoundTag> entityData = stack.get(MagicalAllayship.FAIRY_DATA_COMPONENT);
+        if (entityData == null || entityData.left().isEmpty()) {
+            return;
+        }
+
+        UUID uuid = entityData.left().get();
+        if (player.level().getEntityInAnyDimension(uuid) instanceof Fairy fairy) {
+            fairy.setState(player, false);
+            FairySavedData.getDataFrom(level).fairyUuidToData().remove(uuid);
+            return;
+        }
+
+        CompoundTag data = FairySavedData.getDataFrom(level).fairyUuidToData().remove(uuid);
+        if (data == null) {
+            return;
+        }
+
+        Entity entity = EntityType.loadEntityRecursive(MagicalAllayship.FAIRY, data, level, EntitySpawnReason.LOAD, EntityProcessor.NOP);
+        if (!(entity instanceof Fairy fairy)) {
+            return;
+        }
+
+        fairy.setState(player, false);
+        fairy.snapTo(player.getEyePosition());
+        level.addFreshEntity(fairy);
+        stack.set(MagicalAllayship.FAIRY_DATA_COMPONENT, Either.left(fairy.getUUID()));
     }
 
     private static void setName(CompoundTag data, String name) {
