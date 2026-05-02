@@ -70,8 +70,8 @@ public record SuitData(SuitType type, long startTime, float damageTaken) {
             jumpAttribute.removeModifier(SUIT_JUMP_MODIFIER);
     }
 
-    public SuitData damage(float hearts) {
-        return new SuitData(type, startTime, Math.max(0, damageTaken + hearts));
+    public SuitData heal(float health) {
+        return new SuitData(type, startTime, Math.max(0, damageTaken - health));
     }
 
     public enum SuitType implements StringRepresentable {
