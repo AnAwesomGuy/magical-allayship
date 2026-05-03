@@ -68,6 +68,9 @@ public record SuitData(SuitType type, long startTime, float damageTaken) {
         AttributeInstance jumpAttribute = player.getAttribute(Attributes.JUMP_STRENGTH);
         if (jumpAttribute != null)
             jumpAttribute.removeModifier(SUIT_JUMP_MODIFIER);
+
+        AttributeInstance safeFallAttribute = player.getAttribute(Attributes.SAFE_FALL_DISTANCE);
+        if (safeFallAttribute != null) safeFallAttribute.removeModifier(SUIT_JUMP_MODIFIER);
     }
 
     public SuitData heal(float health) {
