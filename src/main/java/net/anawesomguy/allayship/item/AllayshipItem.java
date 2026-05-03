@@ -162,17 +162,17 @@ public class AllayshipItem extends Item {
         }
     }
 
-    public static String getOrCreateAllayshipId(ItemStack stack) {
-        String allayshipId = stack.get(MagicalAllayship.ALLAYSHIP_ID_COMPONENT);
+    public static UUID getOrCreateAllayshipId(ItemStack stack) {
+        UUID allayshipId = stack.get(MagicalAllayship.ALLAYSHIP_ID_COMPONENT);
         if (allayshipId == null) {
-            allayshipId = UUID.randomUUID().toString();
+            allayshipId = UUID.randomUUID();
             stack.set(MagicalAllayship.ALLAYSHIP_ID_COMPONENT, allayshipId);
         }
 
         return allayshipId;
     }
 
-    public static boolean damageAllayship(ServerPlayer player, String allayshipId) {
+    public static boolean damageAllayship(ServerPlayer player, UUID allayshipId) {
         ItemStack stack = player.getMainHandItem();
         if (!stack.is(MagicalAllayship.ALLAYSHIP) || !allayshipId.equals(getOrCreateAllayshipId(stack))) {
             stack = player.getOffhandItem();

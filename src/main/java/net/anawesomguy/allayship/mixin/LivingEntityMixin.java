@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity {
     @Unique
-    private static final DustParticleOptions DOUBLE_JUMP_DUST = new DustParticleOptions(0xEEEEEE, 1F);
+    private static final DustParticleOptions DOUBLE_JUMP_DUST = new DustParticleOptions(0xF6F6F6, 1.5F);
 
     @Shadow
     private int noJumpDelay;

@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.netty.buffer.ByteBuf;
 import net.anawesomguy.allayship.MagicalAllayship;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.Identifier;
@@ -15,8 +16,10 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import org.jspecify.annotations.NullMarked;
 
+import java.util.UUID;
+
 @NullMarked
-public record SuitData(SuitType type, long startTime, String allayshipId, float damageTaken) {
+public record SuitData(SuitType type, long startTime, UUID allayshipId, float damageTaken) {
     public static final Identifier SUIT_SPEED_MODIFIER = MagicalAllayship.id("suit.speed");
     public static final Identifier SUIT_JUMP_MODIFIER = MagicalAllayship.id("suit.jump");
 
@@ -24,18 +27,18 @@ public record SuitData(SuitType type, long startTime, String allayshipId, float 
         instance -> instance.group(
                                 SuitType.CODEC.fieldOf("type").forGetter(SuitData::type),
                                 Codec.LONG.fieldOf("startTime").forGetter(SuitData::startTime),
-                                Codec.STRING.fieldOf("allayshipId").forGetter(SuitData::allayshipId),
+                                UUIDUtil.CODEC.fieldOf("allayshipId").forGetter(SuitData::allayshipId),
                                 Codec.FLOAT.fieldOf("damageTaken").forGetter(SuitData::damageTaken))
                             .apply(instance, SuitData::new));
     public static final StreamCodec<ByteBuf, SuitData> STREAM_CODEC = StreamCodec.composite(
         SuitType.STREAM_CODEC, SuitData::type,
         ByteBufCodecs.LONG, SuitData::startTime,
-        ByteBufCodecs.STRING_UTF8, SuitData::allayshipId,
+        UUIDUtil.STREAM_CODEC, SuitData::allayshipId,
         ByteBufCodecs.FLOAT, SuitData::damageTaken,
         SuitData::new
     );
 
-    public SuitData(SuitType type, long startTime, String allayshipId) {
+    public SuitData(SuitType type, long startTime, UUID allayshipId) {
         this(type, startTime, allayshipId, 0);
     }
 
@@ -51,7 +54,7 @@ public record SuitData(SuitType type, long startTime, String allayshipId, float 
         if (safeFallAttribute != null) {
             safeFallAttribute.removeModifier(SUIT_JUMP_MODIFIER);
             safeFallAttribute.addPermanentModifier(
-                new AttributeModifier(SUIT_JUMP_MODIFIER, 1.0, AttributeModifier.Operation.ADD_VALUE));
+                new AttributeModifier(SUIT_JUMP_MODIFIER, 0.8, AttributeModifier.Operation.ADD_VALUE));
         }
     }
 

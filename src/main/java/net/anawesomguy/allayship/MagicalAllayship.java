@@ -70,7 +70,6 @@ public class MagicalAllayship implements ModInitializer {
                          .persistent(Codec.either(UUIDUtil.CODEC, CustomData.COMPOUND_TAG_CODEC))
                          .build()
     );
-
     public static final DataComponentType<Long> ALLAYSHIP_COOLDOWN_END_COMPONENT = Registry.register(
         BuiltInRegistries.DATA_COMPONENT_TYPE,
         id("allayship_cooldown_end"),
@@ -78,12 +77,11 @@ public class MagicalAllayship implements ModInitializer {
                          .persistent(Codec.LONG)
                          .build()
     );
-
-    public static final DataComponentType<String> ALLAYSHIP_ID_COMPONENT = Registry.register(
+    public static final DataComponentType<UUID> ALLAYSHIP_ID_COMPONENT = Registry.register(
         BuiltInRegistries.DATA_COMPONENT_TYPE,
         id("allayship_id"),
-        DataComponentType.<String>builder()
-                         .persistent(Codec.STRING)
+        DataComponentType.<UUID>builder()
+                         .persistent(UUIDUtil.LENIENT_CODEC)
                          .build()
     );
 
