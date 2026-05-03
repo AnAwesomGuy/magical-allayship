@@ -40,7 +40,7 @@ public abstract class PlayerMixin extends Avatar {
         float suitDamage = data.damageTaken() + dmg;
         if (suitDamage > this.getMaxHealth()) {
             // noinspection DataFlowIssue (since getAttached is nonnull, removeAttached should return nonnul as well)
-            this.removeAttached(MagicalAllayship.SUIT_ATTACHMENT).removeFrom(this); // TODO play sound?
+            this.removeAttached(MagicalAllayship.SUIT_ATTACHMENT).removeFrom(this);
         } else {
             this.setAttached(MagicalAllayship.SUIT_ATTACHMENT, new SuitData(data.type(), data.startTime(), data.allayshipId(), suitDamage));
             this.lastHurtTime = this.tickCount;

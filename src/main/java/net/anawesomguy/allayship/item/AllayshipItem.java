@@ -117,7 +117,7 @@ public class AllayshipItem extends Item {
         fairy.snapTo(player.getEyePosition());
         level.addFreshEntity(fairy);
         held.set(MagicalAllayship.FAIRY_DATA_COMPONENT, Either.left(fairy.getUUID()));
-        level.playSound(player, fairy, SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.NEUTRAL, 2F, 1F);
+        level.playSound(player, fairy, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.NEUTRAL, 1.5F, 1F);
     }
 
     public static void setFairyName(ServerLevel level, ServerPlayer player, InteractionHand hand, String name) {

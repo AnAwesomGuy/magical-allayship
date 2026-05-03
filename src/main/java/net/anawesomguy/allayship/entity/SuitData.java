@@ -8,9 +8,11 @@ import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.ByIdMap;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.Avatar;
+import net.minecraft.world.entity.EntityEvent;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -20,8 +22,7 @@ import java.util.UUID;
 
 @NullMarked
 public record SuitData(SuitType type, long startTime, UUID allayshipId, float damageTaken) {
-    public static final Identifier SUIT_SPEED_MODIFIER = MagicalAllayship.id("suit.speed");
-    public static final Identifier SUIT_JUMP_MODIFIER = MagicalAllayship.id("suit.jump");
+    public static final Identifier SUIT_ATTRIBUTE_MODIFIER = MagicalAllayship.id("suit.modifier");
 
     public static final Codec<SuitData> CODEC = RecordCodecBuilder.create(
         instance -> instance.group(
@@ -45,27 +46,33 @@ public record SuitData(SuitType type, long startTime, UUID allayshipId, float da
     public void addTo(Avatar player) {
         AttributeInstance speedAttribute = player.getAttribute(Attributes.MOVEMENT_SPEED);
         if (speedAttribute != null) {
-            speedAttribute.removeModifier(SUIT_SPEED_MODIFIER);
+            speedAttribute.removeModifier(SUIT_ATTRIBUTE_MODIFIER);
             speedAttribute.addPermanentModifier(
-                new AttributeModifier(SUIT_SPEED_MODIFIER, 0.6, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+                new AttributeModifier(SUIT_ATTRIBUTE_MODIFIER, 0.6, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
         }
 
         AttributeInstance safeFallAttribute = player.getAttribute(Attributes.SAFE_FALL_DISTANCE);
         if (safeFallAttribute != null) {
-            safeFallAttribute.removeModifier(SUIT_JUMP_MODIFIER);
+            safeFallAttribute.removeModifier(SUIT_ATTRIBUTE_MODIFIER);
             safeFallAttribute.addPermanentModifier(
-                new AttributeModifier(SUIT_JUMP_MODIFIER, 0.8, AttributeModifier.Operation.ADD_VALUE));
+                new AttributeModifier(SUIT_ATTRIBUTE_MODIFIER, 0.8, AttributeModifier.Operation.ADD_VALUE));
         }
+
+        player.playSound(SoundEvents.BREEZE_SHOOT, 0.5F, 1F);
+        player.playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.5F, 1F);
+        player.level().broadcastEntityEvent(player, EntityEvent.POOF);
     }
 
     public void removeFrom(Avatar player) {
         AttributeInstance speedAttribute = player.getAttribute(Attributes.MOVEMENT_SPEED);
         if (speedAttribute != null)
-            speedAttribute.removeModifier(SUIT_SPEED_MODIFIER);
+            speedAttribute.removeModifier(SUIT_ATTRIBUTE_MODIFIER);
 
         AttributeInstance safeFallAttribute = player.getAttribute(Attributes.SAFE_FALL_DISTANCE);
         if (safeFallAttribute != null)
-            safeFallAttribute.removeModifier(SUIT_JUMP_MODIFIER);
+            safeFallAttribute.removeModifier(SUIT_ATTRIBUTE_MODIFIER);
+
+        player.playSound(SoundEvents.LARGE_AMETHYST_BUD_BREAK, 1.5F, 1F);
     }
 
     public SuitData heal(float health) {

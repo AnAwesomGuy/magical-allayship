@@ -239,7 +239,7 @@ public class Fairy extends PathfinderMob {
                     held.consume(1, player);
                     linkedAllayship.remove(MagicalAllayship.ALLAYSHIP_COOLDOWN_END_COMPONENT);
                     linkedAllayship.setDamageValue(0);
-                    this.level().playSound(player, this, SoundEvents.ALLAY_THROW, SoundSource.NEUTRAL, 2F, 1F);
+                    this.level().playSound(null, this, SoundEvents.ALLAY_THROW, SoundSource.NEUTRAL, 2F, 1F);
                     return InteractionResult.SUCCESS;
                 }
 
@@ -253,7 +253,7 @@ public class Fairy extends PathfinderMob {
             ItemStack stack = MagicalAllayship.ALLAYSHIP.getDefaultInstance();
             stack.set(MagicalAllayship.FAIRY_DATA_COMPONENT, Either.right(AllayshipItem.dataFrom(this)));
             BehaviorUtils.throwItem(this, stack, position().add(0, 0.5, 0));
-            this.level().playSound(player, this, SoundEvents.ALLAY_THROW, SoundSource.NEUTRAL, 2F, 1F);
+            this.level().playSound(null, this, SoundEvents.ALLAY_THROW, SoundSource.NEUTRAL, 2F, 1F);
             this.discard();
             return InteractionResult.SUCCESS;
         }
