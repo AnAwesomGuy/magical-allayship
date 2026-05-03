@@ -7,6 +7,7 @@
   "item.magical-allayship.heart_diamond": "Heart Diamond",
   "message.magical-allayship.allayship-recharging": "The allayship is recharging!",
   "message.magical-allayship.fairy-not-found": "Could not find fairy with UUID: %s!",
+  "message.magical-allayship.no-fairy": "This allayship has no fairy!",
   "tooltip.magical-allayship.fairy": "Call Fairy",
   "tooltip.magical-allayship.guide": "Guide",
   "tooltip.magical-allayship.settings": "Info & Settings",

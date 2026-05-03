@@ -113,6 +113,11 @@ public class MagicalAllayship implements ModInitializer {
             if (!item.is(ALLAYSHIP))
                 return;
 
+            if (!item.has(MagicalAllayship.FAIRY_DATA_COMPONENT)) {
+                context.player().sendOverlayMessage(Component.translatable("message.magical-allayship.no-fairy"));
+                return;
+            }
+
             if (AllayshipItem.refreshCooldown(item, context.server().overworld().getGameTime())) {
                 context.player().sendOverlayMessage(Component.translatable("message.magical-allayship.allayship-recharging"));
                 return;

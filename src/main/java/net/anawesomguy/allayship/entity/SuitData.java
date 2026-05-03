@@ -47,18 +47,11 @@ public record SuitData(SuitType type, long startTime, String allayshipId, float 
                 new AttributeModifier(SUIT_SPEED_MODIFIER, 0.6, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
         }
 
-        AttributeInstance jumpAttribute = player.getAttribute(Attributes.JUMP_STRENGTH);
-        if (jumpAttribute != null) {
-            jumpAttribute.removeModifier(SUIT_JUMP_MODIFIER);
-            jumpAttribute.addPermanentModifier(
-                new AttributeModifier(SUIT_JUMP_MODIFIER, 0.2, AttributeModifier.Operation.ADD_VALUE));
-        }
-
         AttributeInstance safeFallAttribute = player.getAttribute(Attributes.SAFE_FALL_DISTANCE);
         if (safeFallAttribute != null) {
             safeFallAttribute.removeModifier(SUIT_JUMP_MODIFIER);
             safeFallAttribute.addPermanentModifier(
-                new AttributeModifier(SUIT_JUMP_MODIFIER, 0.8, AttributeModifier.Operation.ADD_VALUE));
+                new AttributeModifier(SUIT_JUMP_MODIFIER, 1.0, AttributeModifier.Operation.ADD_VALUE));
         }
     }
 
@@ -67,12 +60,9 @@ public record SuitData(SuitType type, long startTime, String allayshipId, float 
         if (speedAttribute != null)
             speedAttribute.removeModifier(SUIT_SPEED_MODIFIER);
 
-        AttributeInstance jumpAttribute = player.getAttribute(Attributes.JUMP_STRENGTH);
-        if (jumpAttribute != null)
-            jumpAttribute.removeModifier(SUIT_JUMP_MODIFIER);
-
         AttributeInstance safeFallAttribute = player.getAttribute(Attributes.SAFE_FALL_DISTANCE);
-        if (safeFallAttribute != null) safeFallAttribute.removeModifier(SUIT_JUMP_MODIFIER);
+        if (safeFallAttribute != null)
+            safeFallAttribute.removeModifier(SUIT_JUMP_MODIFIER);
     }
 
     public SuitData heal(float health) {
