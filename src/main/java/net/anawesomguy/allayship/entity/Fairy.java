@@ -194,15 +194,14 @@ public class Fairy extends PathfinderMob {
             return;
         }
 
-        Vec3 look = owner.getLookAngle();
-        Vec3 side = new Vec3(-look.z, 0, look.x);
         Vec3 currentSide = this.position().subtract(owner.position()).multiply(1, 0, 1);
+        Vec3 side = new Vec3(this.getId() % 2 == 0 ? 1 : -1, 0, 0.35);
         if (currentSide.lengthSqr() > 0.2 * 0.2 && this.position().distanceToSqr(owner.position()) < 3 * 3) {
-            side = currentSide.normalize().lerp(side.normalize(), 0.08);
+            side = currentSide.normalize();
         }
 
-        side = side.normalize().scale(1.5);
-        Vec3 target = owner.position().add(side).add(0, 1 + Math.sin(this.tickCount / 10D) * 0.2, 0);
+        side = side.normalize().scale(1.9);
+        Vec3 target = owner.position().add(side).add(0, 0.75 + Math.sin(this.tickCount / 10D) * 0.16, 0);
         Vec3 movement = target.subtract(this.position());
         if (movement.lengthSqr() > (0.10 * 0.10)) {
             movement = movement.normalize().scale(0.10);
@@ -215,6 +214,38 @@ public class Fairy extends PathfinderMob {
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack held = player.getItemInHand(hand);
         if (held.is(MagicalAllayship.HEART_DIAMOND)) {
+            if (this.level().isClientSide()) {
+                return InteractionResult.SUCCESS;
+            }
+
+            if (this.owner != null) {
+                ItemStack linkedAllayship = player.getMainHandItem();
+                if (!isLinkedAllayship(linkedAllayship)) {
+                    linkedAllayship = player.getOffhandItem();
+                }
+
+                if (!isLinkedAllayship(linkedAllayship)) {
+                    for (ItemStack stack : player.getInventory().getNonEquipmentItems()) {
+                        if (isLinkedAllayship(stack)) {
+                            linkedAllayship = stack;
+                            break;
+                        }
+                    }
+                }
+
+                // if that stack is cooling down, heart diamonds insta refresh the respective allayship
+                Long cooldownEnd = linkedAllayship.isEmpty() ? null : linkedAllayship.get(MagicalAllayship.ALLAYSHIP_COOLDOWN_END_COMPONENT);
+                if (this.owner.equals(player.getUUID()) && cooldownEnd != null && cooldownEnd > this.level().getGameTime()) {
+                    held.consume(1, player);
+                    linkedAllayship.remove(MagicalAllayship.ALLAYSHIP_COOLDOWN_END_COMPONENT);
+                    linkedAllayship.setDamageValue(0);
+                    this.level().playSound(player, this, SoundEvents.ALLAY_THROW, SoundSource.NEUTRAL, 2F, 1F);
+                    return InteractionResult.SUCCESS;
+                }
+
+                return InteractionResult.SUCCESS;
+            }
+
             held.consume(1, player);
             this.stopRiding();
             this.ejectPassengers();
@@ -256,6 +287,15 @@ public class Fairy extends PathfinderMob {
         this.owner = player.getUUID();
         this.returning = returning;
         this.clearHome();
+    }
+
+    private boolean isLinkedAllayship(ItemStack stack) {
+        if (!stack.is(MagicalAllayship.ALLAYSHIP)) {
+            return false;
+        }
+
+        Either<UUID, CompoundTag> data = stack.get(MagicalAllayship.FAIRY_DATA_COMPONENT);
+        return data != null && data.left().filter(this.getUUID()::equals).isPresent();
     }
 
     @Override
