@@ -196,7 +196,13 @@ public class Fairy extends PathfinderMob {
         }
 
         Vec3 look = owner.getLookAngle();
-        Vec3 side = new Vec3(-look.z, 0, look.x).normalize().scale(1.5);
+        Vec3 side = new Vec3(-look.z, 0, look.x);
+        Vec3 currentSide = this.position().subtract(owner.position()).multiply(1, 0, 1);
+        if (currentSide.lengthSqr() > 0.2 * 0.2 && this.position().distanceToSqr(owner.position()) < 3 * 3) {
+            side = currentSide.normalize().lerp(side.normalize(), 0.08);
+        }
+
+        side = side.normalize().scale(1.5);
         Vec3 target = owner.position().add(side).add(0, 1 + Math.sin(this.tickCount / 10D) * 0.2, 0);
         Vec3 movement = target.subtract(this.position());
         if (movement.lengthSqr() > (0.10 * 0.10)) {
