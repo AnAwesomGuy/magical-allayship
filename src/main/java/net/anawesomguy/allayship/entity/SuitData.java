@@ -16,7 +16,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public record SuitData(SuitType type, long startTime, float damageTaken) {
+public record SuitData(SuitType type, long startTime, String allayshipId, float damageTaken) {
     public static final Identifier SUIT_SPEED_MODIFIER = MagicalAllayship.id("suit.speed");
     public static final Identifier SUIT_JUMP_MODIFIER = MagicalAllayship.id("suit.jump");
 
@@ -24,17 +24,19 @@ public record SuitData(SuitType type, long startTime, float damageTaken) {
         instance -> instance.group(
                                 SuitType.CODEC.fieldOf("type").forGetter(SuitData::type),
                                 Codec.LONG.fieldOf("startTime").forGetter(SuitData::startTime),
+                                Codec.STRING.fieldOf("allayshipId").forGetter(SuitData::allayshipId),
                                 Codec.FLOAT.fieldOf("damageTaken").forGetter(SuitData::damageTaken))
                             .apply(instance, SuitData::new));
     public static final StreamCodec<ByteBuf, SuitData> STREAM_CODEC = StreamCodec.composite(
         SuitType.STREAM_CODEC, SuitData::type,
         ByteBufCodecs.LONG, SuitData::startTime,
+        ByteBufCodecs.STRING_UTF8, SuitData::allayshipId,
         ByteBufCodecs.FLOAT, SuitData::damageTaken,
         SuitData::new
     );
 
-    public SuitData(SuitType type, long startTime) {
-        this(type, startTime, 0);
+    public SuitData(SuitType type, long startTime, String allayshipId) {
+        this(type, startTime, allayshipId, 0);
     }
 
     public void addTo(Avatar player) {
@@ -74,7 +76,7 @@ public record SuitData(SuitType type, long startTime, float damageTaken) {
     }
 
     public SuitData heal(float health) {
-        return new SuitData(type, startTime, Math.max(0, damageTaken - health));
+        return new SuitData(type, startTime, allayshipId, Math.max(0, damageTaken - health));
     }
 
     public enum SuitType implements StringRepresentable {

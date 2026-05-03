@@ -20,17 +20,21 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityProcessor;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.TagValueOutput;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.UUID;
 
 @NullMarked
 public class AllayshipItem extends Item {
+    public static final int MAX_DURABILITY = 180;
+    public static final int ACTIVE_DMG_INTERVAL = 20;
     public static final float HEALING_SPEED = 20F; // heals 1 health every this many ticks
 
     private static final List<String> IGNORED_TAGS = List.of(
@@ -59,6 +63,12 @@ public class AllayshipItem extends Item {
 
     public AllayshipItem(Properties properties) {
         super(properties);
+    }
+
+    @Override
+    public void inventoryTick(ItemStack stack, ServerLevel level, Entity entity, @Nullable EquipmentSlot slot) {
+        super.inventoryTick(stack, level, entity, slot);
+        refreshCooldown(stack, level.getGameTime());
     }
 
     public static void callFairy(ServerLevel level, ServerPlayer player, InteractionHand hand) {
@@ -152,8 +162,71 @@ public class AllayshipItem extends Item {
         }
     }
 
+    public static String getOrCreateAllayshipId(ItemStack stack) {
+        String allayshipId = stack.get(MagicalAllayship.ALLAYSHIP_ID_COMPONENT);
+        if (allayshipId == null) {
+            allayshipId = UUID.randomUUID().toString();
+            stack.set(MagicalAllayship.ALLAYSHIP_ID_COMPONENT, allayshipId);
+        }
+
+        return allayshipId;
+    }
+
+    public static boolean damageAllayship(ServerPlayer player, String allayshipId) {
+        ItemStack stack = player.getMainHandItem();
+        if (!stack.is(MagicalAllayship.ALLAYSHIP) || !allayshipId.equals(getOrCreateAllayshipId(stack))) {
+            stack = player.getOffhandItem();
+        }
+
+        if (!stack.is(MagicalAllayship.ALLAYSHIP) || !allayshipId.equals(getOrCreateAllayshipId(stack))) {
+            for (ItemStack inventoryStack : player.getInventory().getNonEquipmentItems()) {
+                if (inventoryStack.is(MagicalAllayship.ALLAYSHIP) &&
+                    allayshipId.equals(getOrCreateAllayshipId(inventoryStack))) {
+                    stack = inventoryStack;
+                    break;
+                }
+            }
+        }
+
+        if (stack.isEmpty()) {
+            return false;
+        }
+
+        long gameTime = player.level().getGameTime();
+        if (refreshCooldown(stack, gameTime)) {
+            return false;
+        }
+
+        int maxDamage = stack.getMaxDamage();
+        if (stack.getDamageValue() >= maxDamage - 2) {
+            stack.setDamageValue(maxDamage - 1);
+            // wait for 10 mins
+            stack.set(MagicalAllayship.ALLAYSHIP_COOLDOWN_END_COMPONENT, gameTime + 12000L);
+            return false;
+        }
+
+        stack.setDamageValue(stack.getDamageValue() + 1);
+        return true;
+    }
+
+    public static boolean refreshCooldown(ItemStack stack, long gameTime) {
+        Long cooldownEnd = stack.get(MagicalAllayship.ALLAYSHIP_COOLDOWN_END_COMPONENT);
+        if (cooldownEnd == null) {
+            return false;
+        }
+
+        if (cooldownEnd > gameTime) {
+            return true;
+        }
+
+        stack.remove(MagicalAllayship.ALLAYSHIP_COOLDOWN_END_COMPONENT);
+        stack.setDamageValue(0);
+        return false;
+    }
+
     // called in InventoryMixin
     public void onAddToInventory(ItemStack stack, Player player) {
+        getOrCreateAllayshipId(stack);
         if (!(player.level() instanceof ServerLevel level)) {
             return;
         }

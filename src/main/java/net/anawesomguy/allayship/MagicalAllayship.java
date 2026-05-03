@@ -23,6 +23,7 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.InteractionHand;
@@ -60,7 +61,7 @@ public class MagicalAllayship implements ModInitializer {
     public static final Item HEART_DIAMOND = registerItem("heart_diamond", Item::new, new Item.Properties());
     // fairy data stored in FAIRY_DATA_COMPONENT component
     public static final Item ALLAYSHIP = registerItem("allayship", AllayshipItem::new,
-                                                      new Item.Properties().stacksTo(1));
+                                                      new Item.Properties().stacksTo(1).durability(AllayshipItem.MAX_DURABILITY));
 
     public static final DataComponentType<Either<UUID, CompoundTag>> FAIRY_DATA_COMPONENT = Registry.register(
         BuiltInRegistries.DATA_COMPONENT_TYPE,
@@ -69,6 +70,23 @@ public class MagicalAllayship implements ModInitializer {
                          .persistent(Codec.either(UUIDUtil.CODEC, CustomData.COMPOUND_TAG_CODEC))
                          .build()
     );
+
+    public static final DataComponentType<Long> ALLAYSHIP_COOLDOWN_END_COMPONENT = Registry.register(
+        BuiltInRegistries.DATA_COMPONENT_TYPE,
+        id("allayship_cooldown_end"),
+        DataComponentType.<Long>builder()
+                         .persistent(Codec.LONG)
+                         .build()
+    );
+
+    public static final DataComponentType<String> ALLAYSHIP_ID_COMPONENT = Registry.register(
+        BuiltInRegistries.DATA_COMPONENT_TYPE,
+        id("allayship_id"),
+        DataComponentType.<String>builder()
+                         .persistent(Codec.STRING)
+                         .build()
+    );
+
     public static final AttachmentType<SuitData> SUIT_ATTACHMENT = AttachmentRegistry.create(
         id("suit_data"),
         builder -> builder.persistent(SuitData.CODEC).syncWith(SuitData.STREAM_CODEC, AttachmentSyncPredicate.all())
@@ -95,10 +113,20 @@ public class MagicalAllayship implements ModInitializer {
             if (!item.is(ALLAYSHIP))
                 return;
 
+            if (AllayshipItem.refreshCooldown(item, context.server().overworld().getGameTime())) {
+                context.player().sendOverlayMessage(Component.translatable("message.magical-allayship.allayship-recharging"));
+                return;
+            }
+
             if (context.player().hasAttached(SUIT_ATTACHMENT)) {
                 context.player().removeAttached(SUIT_ATTACHMENT).removeFrom(context.player());
             } else {
-                SuitData suitData = new SuitData(SuitData.SuitType.PINK, context.server().overworld().getGameTime());
+                SuitData suitData = new SuitData(
+                    SuitData.SuitType.PINK,
+                    context.server().overworld().getGameTime(),
+                    AllayshipItem.getOrCreateAllayshipId(item)
+                );
+
                 suitData.addTo(context.player());
                 context.player().setAttached(SUIT_ATTACHMENT, suitData);
             }

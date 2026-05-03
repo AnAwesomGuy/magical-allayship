@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.expression.Expression;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.anawesomguy.allayship.MagicalAllayship;
 import net.anawesomguy.allayship.entity.SuitData;
+import net.anawesomguy.allayship.item.AllayshipItem;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Avatar;
 import net.minecraft.world.entity.player.Player;
@@ -41,7 +42,7 @@ public abstract class PlayerMixin extends Avatar {
             // noinspection DataFlowIssue (since getAttached is nonnull, removeAttached should return nonnul as well)
             this.removeAttached(MagicalAllayship.SUIT_ATTACHMENT).removeFrom(this); // TODO play sound?
         } else {
-            this.setAttached(MagicalAllayship.SUIT_ATTACHMENT, new SuitData(data.type(), data.startTime(), suitDamage));
+            this.setAttached(MagicalAllayship.SUIT_ATTACHMENT, new SuitData(data.type(), data.startTime(), data.allayshipId(), suitDamage));
             this.lastHurtTime = this.tickCount;
         }
 
@@ -58,7 +59,8 @@ public abstract class PlayerMixin extends Avatar {
         if (data == null)
             return;
 
-        if (this.tickCount - data.startTime() > 2400) { // break suit after 2 minutes
+        long gameTime = this.level().getGameTime();
+        if (gameTime % AllayshipItem.ACTIVE_DMG_INTERVAL == 0 && !AllayshipItem.damageAllayship((ServerPlayer)(Object)this, data.allayshipId())) {
             this.removeAttached(MagicalAllayship.SUIT_ATTACHMENT).removeFrom(this);
             return;
         }
