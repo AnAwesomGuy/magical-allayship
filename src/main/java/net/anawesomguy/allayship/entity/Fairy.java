@@ -174,18 +174,17 @@ public class Fairy extends PathfinderMob {
 
             this.move(movement, true);
             if (this.position().distanceToSqr(target) < 0.64) {
-                for (InteractionHand hand : InteractionHand.values()) {
-                    ItemStack held = owner.getItemInHand(hand);
-                    if (!held.is(MagicalAllayship.ALLAYSHIP)) {
+                for (ItemStack stack : owner.getInventory().getNonEquipmentItems()) {
+                    if (!stack.is(MagicalAllayship.ALLAYSHIP)) {
                         continue;
                     }
 
-                    Either<UUID, CompoundTag> data = held.get(MagicalAllayship.FAIRY_DATA_COMPONENT);
+                    Either<UUID, CompoundTag> data = stack.get(MagicalAllayship.FAIRY_DATA_COMPONENT);
                     if (data == null || data.left().filter(this.getUUID()::equals).isEmpty()) {
                         continue;
                     }
 
-                    held.set(MagicalAllayship.FAIRY_DATA_COMPONENT, Either.right(AllayshipItem.dataFrom(this)));
+                    stack.set(MagicalAllayship.FAIRY_DATA_COMPONENT, Either.right(AllayshipItem.dataFrom(this)));
                     this.addTag(IN_ALLAYSHIP_TAG);
                     this.discard();
                     return;
