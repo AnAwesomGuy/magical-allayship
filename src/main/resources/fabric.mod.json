@@ -3,15 +3,17 @@
 	"id": "magical-allayship",
 	"version": "${version}",
 	"name": "Magical Allayship",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Magical fairy that gives you a powerful suit",
 	"authors": [
-		"Me!"
+		"Applebax",
+  "dooji2",
+  "AnAwesomGuy"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
-	"license": "CC0-1.0",
+	"license": "ISC",
 	"icon": "assets/magical-allayship/icon.png",
 	"environment": "*",
 	"entrypoints": {
