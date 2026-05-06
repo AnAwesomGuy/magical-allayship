@@ -1,43 +1,43 @@
 {
-	"schemaVersion": 1,
-	"id": "magical-allayship",
-	"version": "${version}",
-	"name": "Magical Allayship",
-	"description": "Magical fairy that gives you a powerful suit",
-	"authors": [
-		"Applebax",
-  "dooji2",
-  "AnAwesomGuy"
-	],
-	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
-	},
-	"license": "ISC",
-	"icon": "assets/magical-allayship/icon.png",
-	"environment": "*",
-	"entrypoints": {
-		"main": [
-			"net.anawesomguy.allayship.MagicalAllayship"
-		],
-		"client": [
-			"net.anawesomguy.allayship.client.MagicalAllayshipClient"
-		],
-		"fabric-datagen": [
-			"net.anawesomguy.allayship.datagen.MagicalAllayshipDataGenerator"
-		]
-	},
-	"mixins": [
-		"magical-allayship.mixins.json",
-		{
-			"config": "magical-allayship.client.mixins.json",
-			"environment": "client"
-		}
-	],
-	"depends": {
-		"fabricloader": ">=0.19.1",
-		"minecraft": "~26.1.2",
-		"java": ">=25",
-		"fabric-api": "*"
-	}
+  "schemaVersion": 1,
+  "id": "magical-allayship",
+  "version": "${version}",
+  "name": "Magical Allayship",
+  "description": "Magical fairy that gives you a powerful suit",
+  "authors": [
+    "Applebax",
+    "dooji2",
+    "AnAwesomGuy"
+  ],
+  "contact": {
+    "homepage": "https://fabricmc.net/",
+    "sources": "https://github.com/FabricMC/fabric-example-mod"
+  },
+  "license": "ISC",
+  "icon": "assets/magical-allayship/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "net.anawesomguy.allayship.MagicalAllayship"
+    ],
+    "client": [
+      "net.anawesomguy.allayship.client.MagicalAllayshipClient"
+    ],
+    "fabric-datagen": [
+      "net.anawesomguy.allayship.datagen.MagicalAllayshipDataGenerator"
+    ]
+  },
+  "mixins": [
+    "magical-allayship.mixins.json",
+    {
+      "config": "magical-allayship.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.1",
+    "minecraft": "~26.1.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
 }
