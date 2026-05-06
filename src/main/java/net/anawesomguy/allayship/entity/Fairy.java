@@ -235,7 +235,7 @@ public class Fairy extends PathfinderMob {
 
                 // if that stack is cooling down, heart diamonds insta refresh the respective allayship
                 Long cooldownEnd = linkedAllayship.isEmpty() ? null : linkedAllayship.get(MagicalAllayship.ALLAYSHIP_COOLDOWN_END_COMPONENT);
-                if (this.owner.equals(player.getUUID()) && cooldownEnd != null && cooldownEnd > this.level().getGameTime()) {
+                if (this.owner.equals(player.getUUID()) && cooldownEnd != null && cooldownEnd > this.level().getServer().overworld().getGameTime()) {
                     held.consume(1, player);
                     linkedAllayship.remove(MagicalAllayship.ALLAYSHIP_COOLDOWN_END_COMPONENT);
                     linkedAllayship.setDamageValue(0);
@@ -265,7 +265,7 @@ public class Fairy extends PathfinderMob {
         super.addAdditionalSaveData(output);
         MinecraftServer server = this.level().getServer();
         if (server != null)
-            output.putLong("CurrentTime", server.overworld().getGameTime());
+            output.putLong(CURRENT_TIME_KEY, server.overworld().getGameTime());
         if (this.owner != null)
             output.putString(OWNER_KEY, this.owner.toString());
         output.putBoolean(RETURNING_KEY, this.returning);

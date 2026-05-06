@@ -21,5 +21,6 @@ public class ModelProvider extends FabricModelProvider {
     public void generateItemModels(@NonNull ItemModelGenerators models) {
         models.generateFlatItem(MagicalAllayship.HEART_DIAMOND, ModelTemplates.FLAT_ITEM);
         models.generateFlatItem(MagicalAllayship.ALLAYSHIP, ModelTemplates.FLAT_ITEM);
+        models.generateFlatItem(MagicalAllayship.FAIRY_SPAWN_EGG, ModelTemplates.FLAT_ITEM);
     }
 }

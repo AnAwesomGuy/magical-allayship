@@ -13,6 +13,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
+import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -30,8 +31,10 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.component.CustomData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +64,10 @@ public class MagicalAllayship implements ModInitializer {
     public static final Item HEART_DIAMOND = registerItem("heart_diamond", Item::new, new Item.Properties());
     // fairy data stored in FAIRY_DATA_COMPONENT component
     public static final Item ALLAYSHIP = registerItem("allayship", AllayshipItem::new,
-                                                      new Item.Properties().stacksTo(1).durability(AllayshipItem.MAX_DURABILITY));
+                                                      new Item.Properties().stacksTo(1)
+                                                                           .durability(AllayshipItem.MAX_DURABILITY));
+    public static final Item FAIRY_SPAWN_EGG = registerItem("fairy_spawn_egg", SpawnEggItem::new,
+                                                            new Item.Properties().spawnEgg(FAIRY));
 
     public static final DataComponentType<Either<UUID, CompoundTag>> FAIRY_DATA_COMPONENT = Registry.register(
         BuiltInRegistries.DATA_COMPONENT_TYPE,
@@ -117,7 +123,8 @@ public class MagicalAllayship implements ModInitializer {
             }
 
             if (AllayshipItem.refreshCooldown(item, context.server().overworld().getGameTime())) {
-                context.player().sendOverlayMessage(Component.translatable("message.magical-allayship.allayship-recharging"));
+                context.player()
+                       .sendOverlayMessage(Component.translatable("message.magical-allayship.allayship-recharging"));
                 return;
             }
 
@@ -156,6 +163,14 @@ public class MagicalAllayship implements ModInitializer {
                     fairy.removeAsDiscarded(); // don't save fairy
             }
         });
+
+        CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.SPAWN_EGGS).register(output -> {
+            output.accept(FAIRY_SPAWN_EGG);
+        });
+        CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.INGREDIENTS).register(output -> {
+            output.accept(HEART_DIAMOND);
+        });
+        // don't register the allayship item in creative tab menu, you should be getting it through the fairy
     }
 
     private static Item registerItem(String name, Function<Item.Properties, Item> constructor, Item.Properties properties) {

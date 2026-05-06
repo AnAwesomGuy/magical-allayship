@@ -68,7 +68,7 @@ public class AllayshipItem extends Item {
     @Override
     public void inventoryTick(ItemStack stack, ServerLevel level, Entity entity, @Nullable EquipmentSlot slot) {
         super.inventoryTick(stack, level, entity, slot);
-        refreshCooldown(stack, level.getGameTime());
+        refreshCooldown(stack, level.getServer().overworld().getGameTime());
     }
 
     public static void callFairy(ServerLevel level, ServerPlayer player, InteractionHand hand) {
@@ -192,7 +192,7 @@ public class AllayshipItem extends Item {
             return false;
         }
 
-        long gameTime = player.level().getGameTime();
+        long gameTime = player.level().getServer().overworld().getGameTime();
         if (refreshCooldown(stack, gameTime)) {
             return false;
         }

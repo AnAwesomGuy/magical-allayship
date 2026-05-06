@@ -59,7 +59,7 @@ public abstract class PlayerMixin extends Avatar {
         if (data == null)
             return;
 
-        long gameTime = this.level().getGameTime();
+        long gameTime = this.level().getServer().overworld().getGameTime();
         if (gameTime % AllayshipItem.ACTIVE_DMG_INTERVAL == 0 && !AllayshipItem.damageAllayship((ServerPlayer)(Object)this, data.allayshipId())) {
             this.removeAttached(MagicalAllayship.SUIT_ATTACHMENT).removeFrom(this);
             return;
