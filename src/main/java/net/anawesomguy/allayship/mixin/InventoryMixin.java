@@ -1,8 +1,10 @@
 package net.anawesomguy.allayship.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.sugar.Local;
 import net.anawesomguy.allayship.MagicalAllayship;
 import net.anawesomguy.allayship.item.AllayshipItem;
+import net.minecraft.world.ItemStackWithSlot;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -26,12 +28,9 @@ public abstract class InventoryMixin {
         return original;
     }
 
-    @Inject(method = "load", at = @At("RETURN"))
-    private void onInventoryLoad(CallbackInfo ci) {
-        for (ItemStack itemStack : ((Inventory)(Object)this).getNonEquipmentItems()) {
-            if (itemStack.is(MagicalAllayship.ALLAYSHIP)) {
-                ((AllayshipItem)itemStack.getItem()).onAddToInventory(itemStack, this.player);
-            }
-        }
+    @Inject(method = "load", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;setItem(ILnet/minecraft/world/item/ItemStack;)V"))
+    private void onInventoryLoad(CallbackInfo ci, @Local ItemStackWithSlot item) {
+        if (item.stack().is(MagicalAllayship.ALLAYSHIP))
+            ((AllayshipItem)item.stack().getItem()).onAddToInventory(item.stack(), this.player);
     }
 }

@@ -9,6 +9,7 @@ import net.anawesomguy.allayship.item.AllayshipItem;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Avatar;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Player.class)
 public abstract class PlayerMixin extends Avatar {
     @Unique
-    private int lastHurtTime;
+    private int lastHurtTime = this.tickCount - 1; // so if you relog you'll still have to wait some time
 
     @SuppressWarnings("DataFlowIssue")
     protected PlayerMixin() {
@@ -39,10 +40,15 @@ public abstract class PlayerMixin extends Avatar {
 
         float suitDamage = data.damageTaken() + dmg;
         if (suitDamage > this.getMaxHealth()) {
-            // noinspection DataFlowIssue (since getAttached is nonnull, removeAttached should return nonnul as well)
+            // noinspection DataFlowIssue (since getAttached is nonnull, removeAttached should return nonnull as well)
             this.removeAttached(MagicalAllayship.SUIT_ATTACHMENT).removeFrom(this);
+            ItemStack allayship = AllayshipItem.findAllayship((Player)(Object)this, data.allayshipId());
+            if (!allayship.isEmpty())
+                //noinspection DataFlowIssue (why does this one warn but the one up there doesn't??)
+                allayship.hurtWithoutBreaking(60, (Player)(Object)this);
         } else {
-            this.setAttached(MagicalAllayship.SUIT_ATTACHMENT, new SuitData(data.type(), data.startTime(), data.allayshipId(), suitDamage));
+            this.setAttached(MagicalAllayship.SUIT_ATTACHMENT,
+                             new SuitData(data.type(), data.startTime(), data.allayshipId(), suitDamage));
             this.lastHurtTime = this.tickCount;
         }
 
@@ -60,12 +66,13 @@ public abstract class PlayerMixin extends Avatar {
             return;
 
         long gameTime = this.level().getServer().overworld().getGameTime();
-        if (gameTime % AllayshipItem.ACTIVE_DMG_INTERVAL == 0 && !AllayshipItem.damageAllayship((ServerPlayer)(Object)this, data.allayshipId())) {
+        if (gameTime % AllayshipItem.ACTIVE_DMG_INTERVAL == 0 &&
+            !AllayshipItem.damageAllayship((ServerPlayer)(Object)this, data.allayshipId())) {
             this.removeAttached(MagicalAllayship.SUIT_ATTACHMENT).removeFrom(this);
-            return;
         }
 
-        if (data.damageTaken() > 0 && this.tickCount % 13 == 0 && this.tickCount - this.lastHurtTime > 320) { // heal every 0.65 seconds after 16 seconds of no damage
+        // heal 1 or 2 health every 0.65 seconds after 15 seconds of no damage
+        if (data.damageTaken() > 0 && this.tickCount % 13 == 0 && this.tickCount - this.lastHurtTime > 300) {
             this.setAttached(MagicalAllayship.SUIT_ATTACHMENT, data.heal(this.random.nextBoolean() ? 1 : 2));
         }
     }

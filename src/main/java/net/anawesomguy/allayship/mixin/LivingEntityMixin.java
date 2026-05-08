@@ -23,7 +23,7 @@ public abstract class LivingEntityMixin extends Entity {
     private int noJumpDelay;
 
     @Unique
-    private boolean didDoubleJump;
+    private boolean didDoubleJump = true; // initialize to true so you can't relog to infinitely double jump (who would do that tho)
 
     public LivingEntityMixin(EntityType<?> type, Level level) {
         super(type, level);

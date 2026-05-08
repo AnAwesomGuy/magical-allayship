@@ -4,9 +4,9 @@ import com.mojang.datafixers.util.Either;
 import net.anawesomguy.allayship.MagicalAllayship;
 import net.anawesomguy.allayship.entity.Fairy;
 import net.anawesomguy.allayship.world.FairySavedData;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
@@ -172,22 +172,26 @@ public class AllayshipItem extends Item {
         return allayshipId;
     }
 
-    public static boolean damageAllayship(ServerPlayer player, UUID allayshipId) {
+    public static ItemStack findAllayship(Player player, UUID allayshipId) {
         ItemStack stack = player.getMainHandItem();
-        if (!stack.is(MagicalAllayship.ALLAYSHIP) || !allayshipId.equals(getOrCreateAllayshipId(stack))) {
-            stack = player.getOffhandItem();
-        }
+        if (stack.is(MagicalAllayship.ALLAYSHIP) && allayshipId.equals(getOrCreateAllayshipId(stack)))
+            return stack;
 
-        if (!stack.is(MagicalAllayship.ALLAYSHIP) || !allayshipId.equals(getOrCreateAllayshipId(stack))) {
-            for (ItemStack inventoryStack : player.getInventory().getNonEquipmentItems()) {
-                if (inventoryStack.is(MagicalAllayship.ALLAYSHIP) &&
-                    allayshipId.equals(getOrCreateAllayshipId(inventoryStack))) {
-                    stack = inventoryStack;
-                    break;
-                }
+        stack = player.getOffhandItem();
+        if (stack.is(MagicalAllayship.ALLAYSHIP) && allayshipId.equals(getOrCreateAllayshipId(stack)))
+            return stack;
+
+        for (ItemStack inventoryStack : player.getInventory().getNonEquipmentItems())
+            if (inventoryStack.is(MagicalAllayship.ALLAYSHIP) &&
+                allayshipId.equals(getOrCreateAllayshipId(inventoryStack))) {
+                return inventoryStack;
             }
-        }
 
+        return ItemStack.EMPTY;
+    }
+
+    public static boolean damageAllayship(ServerPlayer player, UUID allayshipId) {
+        ItemStack stack = AllayshipItem.findAllayship(player, allayshipId);
         if (stack.isEmpty()) {
             return false;
         }
@@ -226,10 +230,11 @@ public class AllayshipItem extends Item {
 
     // called in InventoryMixin
     public void onAddToInventory(ItemStack stack, Player player) {
-        getOrCreateAllayshipId(stack);
         if (!(player.level() instanceof ServerLevel level)) {
             return;
         }
+
+        getOrCreateAllayshipId(stack);
 
         Either<UUID, CompoundTag> entityData = stack.get(MagicalAllayship.FAIRY_DATA_COMPONENT);
         if (entityData == null || entityData.left().isEmpty()) {
