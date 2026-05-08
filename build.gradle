@@ -81,3 +81,29 @@ jar {
 //		// retrieving dependencies.
 //	}
 //}
+
+publishMods {
+	file = jar.archiveFile
+	additionalFiles.from sourcesJar.archiveFile
+	type = STABLE
+	changelog = 'iron out some bugs and some little "qol improvements"' // TODO update me
+	modLoaders.add 'fabric'
+	displayName = "Magical Allayship $mod_version"
+
+	modrinth {
+		projectId = 'n49unES0'
+		accessToken = providers.environmentVariable 'MODRINTH_TOKEN'
+		minecraftVersions.addAll '26.1.2'
+
+		requires {
+			slug = 'fabric-api'
+		}
+	}
+
+	github {
+		accessToken = providers.environmentVariable 'GITHUB_TOKEN'
+		repository = 'AnAwesomGuy/magical-allayship'
+		tagName = mod_version
+		commitish = 'master'
+	}
+}
