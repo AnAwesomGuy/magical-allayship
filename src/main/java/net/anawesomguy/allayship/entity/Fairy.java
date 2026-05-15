@@ -303,6 +303,10 @@ public class Fairy extends PathfinderMob {
         return false;
     }
 
+    public boolean hasOwner() {
+        return this.owner != null;
+    }
+
     private void move(Vec3 movement, boolean rotate) {
         this.setDeltaMovement(movement);
         super.move(MoverType.SELF, movement);

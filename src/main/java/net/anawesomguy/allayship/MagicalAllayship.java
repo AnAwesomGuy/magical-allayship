@@ -155,12 +155,13 @@ public class MagicalAllayship implements ModInitializer {
 
             if (entity instanceof Fairy fairy &&
                 (removalReason.shouldDestroy() || removalReason.shouldSave()) &&
-                !fairy.entityTags().contains(Fairy.IN_ALLAYSHIP_TAG)) {
+                !fairy.entityTags().contains(Fairy.IN_ALLAYSHIP_TAG) &&
+                fairy.hasOwner()) { // if the fairy has no owner that means that it is wild and hasn't been in an allayship
                 FairySavedData.getDataFrom(level)
                               .fairyUuidToData()
                               .put(fairy.getUUID(), AllayshipItem.dataFrom(fairy));
                 if (removalReason.shouldSave())
-                    fairy.removeAsDiscarded(); // don't save fairy
+                    fairy.removeAsDiscarded(); // don't save fairy to chunk
             }
         });
 
