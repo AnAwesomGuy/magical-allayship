@@ -18,6 +18,7 @@ public class EnglishLanguageProvider extends FabricLanguageProvider {
         builder.add(MagicalAllayship.FAIRY, "Fairy");
         builder.add(MagicalAllayship.HEART_DIAMOND, "Heart Diamond");
         builder.add(MagicalAllayship.ALLAYSHIP, "Allayship");
+        builder.add(MagicalAllayship.FAIRY_SPAWN_EGG, "Fairy Spawn Egg");
 
         builder.add("message.magical-allayship.fairy-not-found", "Could not find fairy with UUID: %s!");
         builder.add("message.magical-allayship.no-fairy", "This allayship has no fairy!");
